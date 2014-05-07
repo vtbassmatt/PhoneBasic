@@ -34,7 +34,7 @@ def tokenize(s):
         typ = mo.lastgroup
         if typ == 'NEWLINE':
             yield Token(typ, "\n", line, mo.start()-line_start)
-            line_start = pos
+            line_start = pos + 1
             line += 1
         elif typ != 'SKIP':
             val = mo.group(typ)

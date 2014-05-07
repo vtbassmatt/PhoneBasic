@@ -13,7 +13,7 @@ def tokenize(s):
     keywords = {'IF', 'THEN', 'PRINT', 'GOTO', 'INPUT', 'LET', 'COMPUTE',
         'AS', 'ACCEPT', 'RETURN', 'CLEAR', 'END'}
     token_specification = [
-        ('NUMBER',  r'\d+(\.\d*)?'), # Integer or decimal number
+        ('NUMBER',  r'(\-)?\d+(\.\d*)?'), # Integer or decimal number
         ('STRING',  r'"([^"])*"'),   # Simple strings (no escape character)
         ('ASSIGN',  r'BE'),          # Assignment operator
         ('ID',      r'[A-Za-z][A-Za-z0-9_]*'),  # Identifiers

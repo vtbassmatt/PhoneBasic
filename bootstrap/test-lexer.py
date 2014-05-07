@@ -1,6 +1,6 @@
 import unittest
 import itertools
-from lexer import tokenize, Token
+from lexer import tokenize, Token, LexerError
 
 class TestTokenize(unittest.TestCase):
     """
@@ -63,6 +63,15 @@ class TestTokenize(unittest.TestCase):
             self.assertEqual(token.value, ex.value)
             self.assertEqual(token.line, ex.line)
             self.assertEqual(token.column, ex.column)
+
+
+    def test_badlex(self):
+        def inner():
+            tokens = tokenize("'not a string'")
+            for token in tokens:
+                pass
+
+        self.assertRaises(LexerError, inner)
 
 
 if __name__ == '__main__':

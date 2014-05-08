@@ -34,7 +34,7 @@ class Parser(object):
                 continue
 
             else:
-                raise ParserError("unexpected token at line " + str(token.line))
+                raise ParserError("unexpected token", token.line)
 
         return ast
 
@@ -43,14 +43,14 @@ class Parser(object):
         # make sure colon and newline matched
         if colon.typ == "COLON" and newline.typ == "NEWLINE":
             return ["label", label_token.value]
-        raise ParserError("error parsing line label")
+        raise ParserError("error parsing line label", label_token)
 
     def m_let(self, let_token, token_iter):
         (var, assign) = (token_iter.next(), token_iter.next())
         if var.typ == "ID" and assign.typ == "ASSIGN":
             (expr, _) = self.p_expr(token_iter.next(), token_iter, ["NEWLINE"])
             return ["let", var.value, expr]
-        raise ParserError("error parsing LET statement")
+        raise ParserError("error parsing LET statement", let_token)
 
     def m_print(self, print_token, token_iter):
         print_vals = []

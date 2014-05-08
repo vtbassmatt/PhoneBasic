@@ -34,7 +34,7 @@ class Parser(object):
                 continue
 
             else:
-                raise ParserError("unexpected token at line " + token.line)
+                raise ParserError("unexpected token at line " + str(token.line))
 
         return ast
 
@@ -53,10 +53,35 @@ class Parser(object):
         raise ParserError("error parsing LET statement")
 
     def m_print(self, print_token, token_iter):
-        output = token_iter.next()
-        # TODO: string | expression list (requires lookahead)
-        if output.typ == "STRING":
-            return ["print", [output.value, "\n"]]
+        print_vals = []
+        current_expr = []
+        while True:
+            output = token_iter.next()
+            print "*** ", output
+            if output.typ == "STRING":
+                print_vals.append(output.value)
+                continue
+            elif output.typ == "COMMA":
+                if len(current_expr) > 0:
+                    print_vals.append(current_expr)
+                current_expr = []
+                continue
+            elif output.typ == "NEWLINE":
+                if len(current_expr) > 0:
+                    print_vals.append(current_expr)
+                print_vals.append("\n")
+                return ["print", print_vals]
+            ######### REMOVE ###########
+            elif output.typ == "NUMBER":
+                # TODO: remove this when expression parsing is online
+                if len(current_expr) > 0:
+                    print_vals.append(current_expr)
+                print_vals.append(output.value)
+                continue
+            ############################
+            else:
+                raise NotImplementedError("Expression parsing isn't online yet")
+
         raise ParserError("error parsing PRINT statement")
 
 
@@ -76,7 +101,9 @@ if __name__ == "__main__":
         Token("NEWLINE", "\n", 2, 11),
         Token("PRINT", "PRINT", 3, 0),
         Token("STRING", "Hello world", 3, 6),
-        Token("NEWLINE", "\n", 3, 19),
+        Token("COMMA", ",", 3, 19),
+        Token("NUMBER", "27", 3, 21),
+        Token("NEWLINE", "\n", 3, 23),
         Token("PRINT", "PRINT", 4, 0),
         Token("STRING", "Hello compiler", 4, 6),
         Token("NEWLINE", "\n", 4, 22),

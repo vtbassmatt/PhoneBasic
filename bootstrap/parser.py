@@ -46,43 +46,41 @@ class Parser(object):
         raise ParserError("error parsing line label")
 
     def m_let(self, let_token, token_iter):
-        (var, assign, expr) = (token_iter.next(), token_iter.next(), token_iter.next())
-        # TODO: expression parser
+        (var, assign) = (token_iter.next(), token_iter.next())
         if var.typ == "ID" and assign.typ == "ASSIGN":
-            return ["let", var.value, expr.value]
+            (expr, _) = self.p_expr(token_iter.next(), token_iter, ["NEWLINE"])
+            return ["let", var.value, expr]
         raise ParserError("error parsing LET statement")
 
     def m_print(self, print_token, token_iter):
         print_vals = []
-        current_expr = []
         while True:
             output = token_iter.next()
-            print "*** ", output
             if output.typ == "STRING":
                 print_vals.append(output.value)
                 continue
             elif output.typ == "COMMA":
-                if len(current_expr) > 0:
-                    print_vals.append(current_expr)
-                current_expr = []
                 continue
             elif output.typ == "NEWLINE":
-                if len(current_expr) > 0:
-                    print_vals.append(current_expr)
-                print_vals.append("\n")
-                return ["print", print_vals]
-            ######### REMOVE ###########
-            elif output.typ == "NUMBER":
-                # TODO: remove this when expression parsing is online
-                if len(current_expr) > 0:
-                    print_vals.append(current_expr)
-                print_vals.append(output.value)
-                continue
-            ############################
+                break
             else:
-                raise NotImplementedError("Expression parsing isn't online yet")
+                (expr, next) = self.p_expr(output,token_iter)
+                print_vals.append(expr)
+                if next.typ == "NEWLINE":
+                    break
+                continue
 
-        raise ParserError("error parsing PRINT statement")
+        print_vals.append("\n")
+        return ["print", print_vals]
+
+    def p_expr(self, token, token_iter, terminators = None):
+        if terminators == None:
+            terminators = ["NEWLINE", "COMMA"]
+        allowed = ["NUMBER", "ID", "ARITHOP"]
+
+        # TODO: read more than just the next token
+        expr = ["expr", token.value]
+        return (expr, token_iter.next())
 
 
 def parse(tokens):

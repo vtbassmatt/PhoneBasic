@@ -15,7 +15,7 @@ class TestParser(unittest.TestCase):
             ['let', 'a', ['expr', '25']],
             ['print', ['Hello world', ['expr', '27'], '\n']],
             ['print', ['Hello compiler', '\n']],
-            ['if', ['expr', 'a'], '<', ['expr', '25'], ['print', ['Less than 2', '\n']]],
+            ['if', ['expr', 'a'], '<', ['expr', '2'], ['print', ['Less than 2', '\n']]],
             ['goto', 'top'],
             ['input', ['a', 'b']],
             ['end']
@@ -47,7 +47,7 @@ class TestParser(unittest.TestCase):
             Token("IF", "IF", 7, 0),
             Token("ID", "a", 7, 3),
             Token("COMPOP", "<", 7, 5),
-            Token("NUMBER", "25", 7, 7),
+            Token("NUMBER", "2", 7, 7),
             Token("THEN", "THEN", 7, 10),
             Token("PRINT", "PRINT", 7, 15),
             Token("STRING", "Less than 2", 7, 22),

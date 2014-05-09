@@ -171,7 +171,7 @@ if __name__ == "__main__":
         Token("IF", "IF", 7, 0),
         Token("ID", "a", 7, 3),
         Token("COMPOP", "<", 7, 5),
-        Token("NUMBER", "25", 7, 7),
+        Token("NUMBER", "2", 7, 7),
         Token("THEN", "THEN", 7, 10),
         Token("PRINT", "PRINT", 7, 15),
         Token("STRING", "Less than 2", 7, 22),

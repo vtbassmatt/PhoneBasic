@@ -37,10 +37,18 @@ class Parser(object):
                 ast.append(self.m_print())
                 continue
 
+            elif self.token.typ == "IF":
+                ast.append(self.m_if())
+                continue
+
             else:
                 raise ParserError("unexpected token", self.token)
 
         return ast
+
+    def m_stmt(self):
+        # TODO: refactor parse() so that stmt() can be called recursively
+        pass
 
     def m_label(self):
         (colon, newline) = (self.next(), self.next())
@@ -53,7 +61,7 @@ class Parser(object):
         (var, assign) = (self.next(), self.next())
         if var.typ == "ID" and assign.typ == "ASSIGN":
             self.next()
-            return ["let", var.value, self.p_expr(["NEWLINE"])]
+            return ["let", var.value, self.p_expr()]
         raise ParserError("error parsing LET statement", self.token)
 
     def m_print(self):
@@ -74,9 +82,19 @@ class Parser(object):
         print_vals.append("\n")
         return ["print", print_vals]
 
-    def p_expr(self, terminators = None):
-        if terminators == None:
-            terminators = ["NEWLINE", "COMMA"]
+    def m_if(self):
+        self.next()
+        expr1 = self.p_expr()
+        compop = self.next()
+        self.next()
+        expr2 = self.p_expr()
+        then = self.next()
+        if compop.typ == "COMPOP" and then.typ == "THEN":
+            return ["if", expr1, compop.value, expr2, self.m_stmt()]
+        raise ParserError("error parsing IF statement", self.token)
+
+    def p_expr(self):
+        """Parse an expression."""
         allowed = ["NUMBER", "ID", "ARITHOP"]
 
         # TODO: read more than just the next token
@@ -92,19 +110,31 @@ if __name__ == "__main__":
         Token("ID", "top", 1, 0),
         Token("COLON", ":", 1, 3),
         Token("NEWLINE", "\n", 1, 4),
+
         Token("LET", "LET", 2, 0),
         Token("ID", "a", 2, 4),
         Token("ASSIGN", "BE", 2, 6),
         Token("NUMBER", "25", 2, 9),
         Token("NEWLINE", "\n", 2, 11),
+
         Token("PRINT", "PRINT", 3, 0),
         Token("STRING", "Hello world", 3, 6),
         Token("COMMA", ",", 3, 19),
         Token("NUMBER", "27", 3, 21),
         Token("NEWLINE", "\n", 3, 23),
+
         Token("PRINT", "PRINT", 4, 0),
         Token("STRING", "Hello compiler", 4, 6),
         Token("NEWLINE", "\n", 4, 22),
+
+        Token("IF", "IF", 5, 0),
+        Token("ID", "a", 5, 3),
+        Token("COMPOP", "<", 5, 5),
+        Token("NUMBER", "25", 5, 7),
+        Token("THEN", "THEN", 5, 10),
+        Token("PRINT", "PRINT", 5, 15),
+        Token("STRING", "Less than 2", 5, 22),
+        Token("NEWLINE", "\n", 5, 33),
     ])
 
     pprint.pprint(ast)

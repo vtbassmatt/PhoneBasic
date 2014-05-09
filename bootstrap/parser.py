@@ -48,11 +48,12 @@ class Parser(object):
             raise ParserError("unexpected token", self.token)
 
     def m_label(self):
+        id = self.token
         (colon, newline) = (self.next(), self.next())
         # make sure colon and newline matched
         if colon.typ == "COLON" and newline.typ == "NEWLINE":
-            return ["label", self.token.value]
-        raise ParserError("error parsing line label", self.token)
+            return ["label", id.value]
+        raise ParserError("error parsing line label", self.id)
 
     def m_let(self):
         (var, assign) = (self.next(), self.next())

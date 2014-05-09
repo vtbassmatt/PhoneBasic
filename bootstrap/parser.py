@@ -56,7 +56,7 @@ class Parser(object):
         # make sure colon and newline matched
         if colon.typ == "COLON" and newline.typ == "NEWLINE":
             return ["label", id.value]
-        raise ParserError("error parsing line label", self.id)
+        raise ParserError("error parsing line label", id)
 
     def m_let(self):
         (var, assign) = (self.next(), self.next())

@@ -47,6 +47,9 @@ class Parser(object):
         elif self.token.typ == "GOTO":
             return self.m_goto()
 
+        elif self.token.typ == "INPUT":
+            return self.m_input()
+
         else:
             raise ParserError("unexpected token", self.token)
 
@@ -101,6 +104,22 @@ class Parser(object):
             return ["goto", self.token.value]
         raise ParserError("error parsing GOTO statement", self.token)
 
+    def m_input(self):
+        input_vars = []
+        while True:
+            self.next()
+            if self.token.typ == "ID":
+                input_vars.append(self.token.value)
+                continue
+            elif self.token.typ == "COMMA":
+                continue
+            elif self.token.typ == "NEWLINE":
+                break
+            else:
+                raise ParserError("error parsing INPUT statement", self.token)
+
+        return ["input", input_vars]
+
     def p_expr(self):
         """Parse an expression."""
         allowed = ["NUMBER", "ID", "ARITHOP"]
@@ -147,6 +166,13 @@ if __name__ == "__main__":
         Token("GOTO", "GOTO", 6, 0),
         Token("ID", "top", 6, 5),
         Token("NEWLINE", "\n", 6, 8),
+
+        Token("INPUT", "INPUT", 7, 0),
+        Token("ID", "a", 7, 7),
+        Token("COMMA", ",", 7, 8),
+        Token("ID", "b", 7, 10),
+        Token("NEWLINE", "\n", 7, 11),
+
     ])
 
     pprint.pprint(ast)

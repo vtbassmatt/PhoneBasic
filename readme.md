@@ -68,16 +68,16 @@ Different notion of line labeling. Pseudo-functions have a scope.
 ```
 line = label : CR | statement CR
 
-label = [A-Z1-9][A-Z0-9]*
+label = var
 
 statement = PRINT expr-list
 			IF comp-expr THEN statement
 			GOTO label
 			INPUT var-list
 			LET var BE expression
-			COMPUTE var AS label (empty | var-list)
-			ACCEPT var-list
-			RETURN expression
+		~	COMPUTE var AS label (empty | var-list)
+		~	ACCEPT var-list
+		~	RETURN expression
 			CLEAR
 			END
 
@@ -101,3 +101,5 @@ digit = [0-9]
 
 relop = < | <= | = | != | >= | >
 ```
+
+Note: COMPUTE, ACCEPT, and RETURN are not yet in the implementation.

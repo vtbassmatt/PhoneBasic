@@ -1,8 +1,21 @@
 import pprint
 from lexer import Token
+import collections
+
 
 class ParserError(RuntimeError):
     pass
+
+
+PLabel  = collections.namedtuple('PLabel', ['id'])
+PClear  = collections.namedtuple('PClear', [])
+PLet    = collections.namedtuple('PLet', ['id', 'rhs'])
+PPrint  = collections.namedtuple('PPrint', ['rhs'])
+PInput  = collections.namedtuple('PInput', ['rhs'])
+PIf     = collections.namedtuple('PIf', ['expr1', 'compop', 'expr2', 'stmt'])
+PEnd    = collections.namedtuple('PEnd', [])
+PGoto   = collections.namedtuple('PGoto', ['id'])
+PExpr   = collections.namedtuple('PExpr', ['expr'])
 
 
 class Parser(object):
@@ -64,14 +77,14 @@ class Parser(object):
         (colon, newline) = (self.next(), self.next())
         # make sure colon and newline matched
         if colon.typ == "COLON" and newline.typ == "NEWLINE":
-            return ["label", id.value]
+            return PLabel(id.value)
         raise ParserError("error parsing line label", id)
 
     def m_let(self):
         (var, assign) = (self.next(), self.next())
         if var.typ == "ID" and assign.typ == "ASSIGN":
             self.next()
-            return ["let", var.value, self.p_expr()]
+            return PLet(var.value, self.p_expr())
         raise ParserError("error parsing LET statement", self.token)
 
     def m_print(self):
@@ -90,7 +103,7 @@ class Parser(object):
                 continue
 
         print_vals.append("\n")
-        return ["print", print_vals]
+        return PPrint(print_vals)
 
     def m_if(self):
         self.next()
@@ -101,13 +114,13 @@ class Parser(object):
         then = self.next()
         if compop.typ == "COMPOP" and then.typ == "THEN":
             self.next()
-            return ["if", expr1, compop.value, expr2, self.m_stmt()]
+            return PIf(expr1, compop.value, expr2, self.m_stmt())
         raise ParserError("error parsing IF statement", self.token)
 
     def m_goto(self):
         self.next()
         if self.token.typ == "ID":
-            return ["goto", self.token.value]
+            return PGoto(self.token.value)
         raise ParserError("error parsing GOTO statement", self.token)
 
     def m_input(self):
@@ -124,20 +137,20 @@ class Parser(object):
             else:
                 raise ParserError("error parsing INPUT statement", self.token)
 
-        return ["input", input_vars]
+        return PInput(input_vars)
 
     def m_clear(self):
-        return ["clear"]
+        return PClear()
 
     def m_end(self):
-        return ["end"]
+        return PEnd()
 
     def p_expr(self):
         """Parse an expression."""
         allowed = ["NUMBER", "ID", "ARITHOP"]
 
         # TODO: read more than just the next token
-        return ["expr", self.token.value]
+        return PExpr(self.token.value)
 
 
 def parse(tokens):

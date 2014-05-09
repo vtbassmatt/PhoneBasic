@@ -1,6 +1,6 @@
 import unittest
 import itertools
-from parser import parse
+from parser import parse, PClear, PLabel, PLet, PPrint, PIf, PGoto, PExpr, PInput, PEnd
 from lexer import Token
 
 class TestParser(unittest.TestCase):
@@ -10,15 +10,15 @@ class TestParser(unittest.TestCase):
 
     def test_parser(self):
         expect = [
-            ['clear'],
-            ['label', 'top'],
-            ['let', 'a', ['expr', '25']],
-            ['print', ['Hello world', ['expr', '27'], '\n']],
-            ['print', ['Hello compiler', '\n']],
-            ['if', ['expr', 'a'], '<', ['expr', '2'], ['print', ['Less than 2', '\n']]],
-            ['goto', 'top'],
-            ['input', ['a', 'b']],
-            ['end']
+            PClear(),
+            PLabel(id='top'),
+            PLet(id='a', rhs=PExpr(expr='25')),
+            PPrint(rhs=['Hello world', PExpr(expr='27'), '\n']),
+            PPrint(rhs=['Hello compiler', '\n']),
+            PIf(expr1=PExpr(expr='a'), compop='<', expr2=PExpr(expr='2'), stmt=PPrint(rhs=['Less than 2', '\n'])),
+            PGoto(id='top'),
+            PInput(rhs=['a', 'b']),
+            PEnd()
         ]
 
         actual = parse([

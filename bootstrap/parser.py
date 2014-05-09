@@ -7,80 +7,82 @@ class ParserError(RuntimeError):
 
 class Parser(object):
     def __init__(self, tokens):
-        self.tokens = tokens
+        self.token_iter = iter(tokens)
+        self.token = None
+
+    def next(self):
+        return self.token_iter.next()
 
     def parse(self):
         ast = []
-        token_iter = iter(self.tokens)
         while True:
             try:
-                token = token_iter.next()
+                self.token = self.next()
             except StopIteration:
                 break
 
-            if token.typ == "NEWLINE":
+            if self.token.typ == "NEWLINE":
                 continue
 
-            elif token.typ == "ID":    # should be a line label
-                ast.append(self.m_label(token, token_iter))
+            elif self.token.typ == "ID":    # should be a line label
+                ast.append(self.m_label())
                 continue
 
-            elif token.typ == "LET":
-                ast.append(self.m_let(token, token_iter))
+            elif self.token.typ == "LET":
+                ast.append(self.m_let())
                 continue
 
-            elif token.typ == "PRINT":
-                ast.append(self.m_print(token, token_iter))
+            elif self.token.typ == "PRINT":
+                ast.append(self.m_print())
                 continue
 
             else:
-                raise ParserError("unexpected token", token.line)
+                raise ParserError("unexpected token", self.token)
 
         return ast
 
-    def m_label(self, label_token, token_iter):
-        (colon, newline) = (token_iter.next(), token_iter.next())
+    def m_label(self):
+        (colon, newline) = (self.next(), self.next())
         # make sure colon and newline matched
         if colon.typ == "COLON" and newline.typ == "NEWLINE":
-            return ["label", label_token.value]
-        raise ParserError("error parsing line label", label_token)
+            return ["label", self.token.value]
+        raise ParserError("error parsing line label", self.token)
 
-    def m_let(self, let_token, token_iter):
-        (var, assign) = (token_iter.next(), token_iter.next())
+    def m_let(self):
+        (var, assign) = (self.next(), self.next())
         if var.typ == "ID" and assign.typ == "ASSIGN":
-            (expr, _) = self.p_expr(token_iter.next(), token_iter, ["NEWLINE"])
-            return ["let", var.value, expr]
-        raise ParserError("error parsing LET statement", let_token)
+            self.token = self.next()
+            return ["let", var.value, self.p_expr(["NEWLINE"])]
+        raise ParserError("error parsing LET statement", self.token)
 
-    def m_print(self, print_token, token_iter):
+    def m_print(self):
         print_vals = []
         while True:
-            output = token_iter.next()
-            if output.typ == "STRING":
-                print_vals.append(output.value)
+            self.token = self.next()
+            if self.token.typ == "STRING":
+                print_vals.append(self.token.value)
                 continue
-            elif output.typ == "COMMA":
+            elif self.token.typ == "COMMA":
                 continue
-            elif output.typ == "NEWLINE":
+            elif self.token.typ == "NEWLINE":
                 break
             else:
-                (expr, next) = self.p_expr(output,token_iter)
-                print_vals.append(expr)
-                if next.typ == "NEWLINE":
-                    break
+                print_vals.append(self.p_expr())
+                #if next.typ == "NEWLINE":
+                #    break
                 continue
 
         print_vals.append("\n")
         return ["print", print_vals]
 
-    def p_expr(self, token, token_iter, terminators = None):
+    def p_expr(self, terminators = None):
         if terminators == None:
             terminators = ["NEWLINE", "COMMA"]
         allowed = ["NUMBER", "ID", "ARITHOP"]
 
         # TODO: read more than just the next token
-        expr = ["expr", token.value]
-        return (expr, token_iter.next())
+        #self.token = self.next()
+        return ["expr", self.token.value]
 
 
 def parse(tokens):

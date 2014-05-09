@@ -17,10 +17,12 @@ class Opcode(object):
 
     # flow control
     GOTO        = 10
-    HALT        = 11
 
     # working with data
     LITERAL     = 20
+
+    # make HALT really obvious
+    HALT        = 255
 
 
 def translate(ast):
@@ -40,6 +42,15 @@ def translate(ast):
                 raise TranslatorError("Label already exists", op.id)
             label_table[op.id] = len(code)
 
+        elif type(op) == PGoto:
+            if op.id in label_table:
+                code.append(Opcode.LITERAL)         # push a location on the stack
+                code.append(label_table[op.id])
+                code.append(Opcode.GOTO)            # jump to it
+
+        elif type(op) == PEnd:
+            code.append(Opcode.HALT)
+
         else:
             code.append(Opcode.NOOP)
 
@@ -56,6 +67,7 @@ if __name__ == "__main__":
     PRINT "Passed the goto!"
     INPUT a, b
     END
+    GOTO top
     """
 
     ast = parse(tokenize(program_text))

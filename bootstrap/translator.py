@@ -1,6 +1,6 @@
 import pprint
 from lexer import tokenize
-from parser import parse
+from parser import parse, PClear, PLabel, PLet, PPrint, PIf, PGoto, PExpr, PInput, PEnd
 
 
 class TranslatorError(RuntimeError):
@@ -31,15 +31,14 @@ def translate(ast):
     # for this case, "PB01" in ASCII
     code = [ord("P"), ord("B"), ord("0"), ord("1")]
 
-    for line in ast:
-        if line[0] == 'clear':
+    for op in ast:
+        if type(op) == PClear:
             code.append(Opcode.CLEAR)
 
-        elif line[0] == 'label':
-            label = line[1]
-            if label in label_table:
-                raise TranslatorError("Label already exists", label)
-            label_table[label] = len(code)
+        elif type(op) == PLabel:
+            if op.id in label_table:
+                raise TranslatorError("Label already exists", op.id)
+            label_table[op.id] = len(code)
 
         else:
             code.append(Opcode.NOOP)

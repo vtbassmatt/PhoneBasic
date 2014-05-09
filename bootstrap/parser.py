@@ -44,6 +44,9 @@ class Parser(object):
         elif self.token.typ == "IF":
             return self.m_if()
 
+        elif self.token.typ == "GOTO":
+            return self.m_goto()
+
         else:
             raise ParserError("unexpected token", self.token)
 
@@ -92,6 +95,12 @@ class Parser(object):
             return ["if", expr1, compop.value, expr2, self.m_stmt()]
         raise ParserError("error parsing IF statement", self.token)
 
+    def m_goto(self):
+        self.next()
+        if self.token.typ == "ID":
+            return ["goto", self.token.value]
+        raise ParserError("error parsing GOTO statement", self.token)
+
     def p_expr(self):
         """Parse an expression."""
         allowed = ["NUMBER", "ID", "ARITHOP"]
@@ -134,6 +143,10 @@ if __name__ == "__main__":
         Token("PRINT", "PRINT", 5, 15),
         Token("STRING", "Less than 2", 5, 22),
         Token("NEWLINE", "\n", 5, 33),
+
+        Token("GOTO", "GOTO", 6, 0),
+        Token("ID", "top", 6, 5),
+        Token("NEWLINE", "\n", 6, 8),
     ])
 
     pprint.pprint(ast)

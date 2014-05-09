@@ -11,13 +11,14 @@ class Parser(object):
         self.token = None
 
     def next(self):
-        return self.token_iter.next()
+        self.token = self.token_iter.next()
+        return self.token
 
     def parse(self):
         ast = []
         while True:
             try:
-                self.token = self.next()
+                self.next()
             except StopIteration:
                 break
 
@@ -51,14 +52,14 @@ class Parser(object):
     def m_let(self):
         (var, assign) = (self.next(), self.next())
         if var.typ == "ID" and assign.typ == "ASSIGN":
-            self.token = self.next()
+            self.next()
             return ["let", var.value, self.p_expr(["NEWLINE"])]
         raise ParserError("error parsing LET statement", self.token)
 
     def m_print(self):
         print_vals = []
         while True:
-            self.token = self.next()
+            self.next()
             if self.token.typ == "STRING":
                 print_vals.append(self.token.value)
                 continue
@@ -68,8 +69,6 @@ class Parser(object):
                 break
             else:
                 print_vals.append(self.p_expr())
-                #if next.typ == "NEWLINE":
-                #    break
                 continue
 
         print_vals.append("\n")
@@ -81,7 +80,6 @@ class Parser(object):
         allowed = ["NUMBER", "ID", "ARITHOP"]
 
         # TODO: read more than just the next token
-        #self.token = self.next()
         return ["expr", self.token.value]
 
 

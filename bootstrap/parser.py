@@ -50,6 +50,12 @@ class Parser(object):
         elif self.token.typ == "INPUT":
             return self.m_input()
 
+        elif self.token.typ == "CLEAR":
+            return self.m_clear()
+
+        elif self.token.typ == "END":
+            return self.m_end()
+
         else:
             raise ParserError("unexpected token", self.token)
 
@@ -120,6 +126,12 @@ class Parser(object):
 
         return ["input", input_vars]
 
+    def m_clear(self):
+        return ["clear"]
+
+    def m_end(self):
+        return ["end"]
+
     def p_expr(self):
         """Parse an expression."""
         allowed = ["NUMBER", "ID", "ARITHOP"]
@@ -134,45 +146,48 @@ def parse(tokens):
 
 if __name__ == "__main__":
     ast = parse([
-        Token("ID", "top", 1, 0),
-        Token("COLON", ":", 1, 3),
-        Token("NEWLINE", "\n", 1, 4),
+        Token("CLEAR", "CLEAR", 1, 0),
 
-        Token("LET", "LET", 2, 0),
-        Token("ID", "a", 2, 4),
-        Token("ASSIGN", "BE", 2, 6),
-        Token("NUMBER", "25", 2, 9),
-        Token("NEWLINE", "\n", 2, 11),
+        Token("ID", "top", 3, 0),
+        Token("COLON", ":", 3, 3),
+        Token("NEWLINE", "\n", 3, 4),
 
-        Token("PRINT", "PRINT", 3, 0),
-        Token("STRING", "Hello world", 3, 6),
-        Token("COMMA", ",", 3, 19),
-        Token("NUMBER", "27", 3, 21),
-        Token("NEWLINE", "\n", 3, 23),
+        Token("LET", "LET", 4, 0),
+        Token("ID", "a", 4, 4),
+        Token("ASSIGN", "BE", 4, 6),
+        Token("NUMBER", "25", 4, 9),
+        Token("NEWLINE", "\n", 4, 11),
 
-        Token("PRINT", "PRINT", 4, 0),
-        Token("STRING", "Hello compiler", 4, 6),
-        Token("NEWLINE", "\n", 4, 22),
+        Token("PRINT", "PRINT", 5, 0),
+        Token("STRING", "Hello world", 5, 6),
+        Token("COMMA", ",", 5, 19),
+        Token("NUMBER", "27", 5, 21),
+        Token("NEWLINE", "\n", 5, 23),
 
-        Token("IF", "IF", 5, 0),
-        Token("ID", "a", 5, 3),
-        Token("COMPOP", "<", 5, 5),
-        Token("NUMBER", "25", 5, 7),
-        Token("THEN", "THEN", 5, 10),
-        Token("PRINT", "PRINT", 5, 15),
-        Token("STRING", "Less than 2", 5, 22),
-        Token("NEWLINE", "\n", 5, 33),
+        Token("PRINT", "PRINT", 6, 0),
+        Token("STRING", "Hello compiler", 6, 6),
+        Token("NEWLINE", "\n", 6, 22),
 
-        Token("GOTO", "GOTO", 6, 0),
-        Token("ID", "top", 6, 5),
-        Token("NEWLINE", "\n", 6, 8),
+        Token("IF", "IF", 7, 0),
+        Token("ID", "a", 7, 3),
+        Token("COMPOP", "<", 7, 5),
+        Token("NUMBER", "25", 7, 7),
+        Token("THEN", "THEN", 7, 10),
+        Token("PRINT", "PRINT", 7, 15),
+        Token("STRING", "Less than 2", 7, 22),
+        Token("NEWLINE", "\n", 7, 33),
 
-        Token("INPUT", "INPUT", 7, 0),
-        Token("ID", "a", 7, 7),
-        Token("COMMA", ",", 7, 8),
-        Token("ID", "b", 7, 10),
-        Token("NEWLINE", "\n", 7, 11),
+        Token("GOTO", "GOTO", 8, 0),
+        Token("ID", "top", 8, 5),
+        Token("NEWLINE", "\n", 8, 8),
 
+        Token("INPUT", "INPUT", 9, 0),
+        Token("ID", "a", 9, 7),
+        Token("COMMA", ",", 9, 8),
+        Token("ID", "b", 9, 10),
+        Token("NEWLINE", "\n", 9, 11),
+
+        Token("END", "END", 20, 0),
     ])
 
     pprint.pprint(ast)

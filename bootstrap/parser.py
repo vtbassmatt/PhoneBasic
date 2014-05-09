@@ -29,26 +29,23 @@ class Parser(object):
                 ast.append(self.m_label())
                 continue
 
-            elif self.token.typ == "LET":
-                ast.append(self.m_let())
-                continue
-
-            elif self.token.typ == "PRINT":
-                ast.append(self.m_print())
-                continue
-
-            elif self.token.typ == "IF":
-                ast.append(self.m_if())
-                continue
-
             else:
-                raise ParserError("unexpected token", self.token)
+                ast.append(self.m_stmt())
 
         return ast
 
     def m_stmt(self):
-        # TODO: refactor parse() so that stmt() can be called recursively
-        pass
+        if self.token.typ == "LET":
+            return self.m_let()
+
+        elif self.token.typ == "PRINT":
+            return self.m_print()
+
+        elif self.token.typ == "IF":
+            return self.m_if()
+
+        else:
+            raise ParserError("unexpected token", self.token)
 
     def m_label(self):
         (colon, newline) = (self.next(), self.next())
@@ -90,6 +87,7 @@ class Parser(object):
         expr2 = self.p_expr()
         then = self.next()
         if compop.typ == "COMPOP" and then.typ == "THEN":
+            self.next()
             return ["if", expr1, compop.value, expr2, self.m_stmt()]
         raise ParserError("error parsing IF statement", self.token)
 

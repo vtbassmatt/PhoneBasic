@@ -1,7 +1,8 @@
 import unittest
 import itertools
-from parser import parse, PClear, PLabel, PLet, PPrint, PIf, PGoto, PInput, PEnd
-from parser import PExpr, PNumber, PVar
+from parser import parse, ParserError
+from parser import PClear, PLabel, PLet, PPrint, PIf, PGoto, PInput, PEnd
+from parser import PExpr, PNumber, PVar, PArith
 from lexer import Token
 
 class TestParser(unittest.TestCase):
@@ -68,6 +69,80 @@ class TestParser(unittest.TestCase):
         ])
 
         self.assertEqual(expect, actual)
+
+    def test_expr_parser(self):
+        """test the expression parser with a good case"""
+        # from the Shunting Yard page on wikipedia:
+        # 3 + 4 * 2 / ( 1 - 5 )
+        expect = [
+            PLet(id='a', rhs=PExpr(expr=[
+                PNumber(value='3'),
+                PNumber(value='4'),
+                PNumber(value='2'),
+                PArith(op='*'),
+                PNumber(value='1'),
+                PNumber(value='5'),
+                PArith(op='-'),
+                PArith(op='/'),
+                PArith(op='+'),
+            ])),
+        ]
+
+        actual = parse([
+            Token("LET", "LET", 4, 0),
+            Token("ID", "a", 4, 4),
+            Token("ASSIGN", "BE", 4, 6),
+            Token("NUMBER", "3", 4, 9),
+            Token("ARITHOP", "+", 4, 10),
+            Token("NUMBER", "4", 4, 11),
+            Token("ARITHOP", "*", 4, 12),
+            Token("NUMBER", "2", 4, 13),
+            Token("ARITHOP", "/", 4, 14),
+            Token("LPAREN", "(", 4, 15),
+            Token("NUMBER", "1", 4, 16),
+            Token("ARITHOP", "-", 4, 17),
+            Token("NUMBER", "5", 4, 18),
+            Token("RPAREN", ")", 4, 19),
+            Token("NEWLINE", "\n", 4, 20),
+        ])
+
+        self.assertEqual(expect, actual)
+
+    def test_expr_mismatch_1(self):
+        """paren mismatch 1"""
+        # 2 + ( 1 - 5
+        def inner():
+            parse([
+                Token("LET", "LET", 4, 0),
+                Token("ID", "a", 4, 4),
+                Token("ASSIGN", "BE", 4, 6),
+                Token("NUMBER", "2", 4, 9),
+                Token("ARITHOP", "+", 4, 10),
+                Token("LPAREN", "(", 4, 11),
+                Token("NUMBER", "1", 4, 12),
+                Token("ARITHOP", "-", 4, 13),
+                Token("NUMBER", "5", 4, 14),
+                Token("NEWLINE", "\n", 4, 15),
+            ])
+        self.assertRaises(ParserError, inner)
+
+    def test_expr_mismatch_2(self):
+        """paren mismatch 2"""
+        # 2 + 1 - 5 )
+        def inner():
+            parse([
+                Token("LET", "LET", 4, 0),
+                Token("ID", "a", 4, 4),
+                Token("ASSIGN", "BE", 4, 6),
+                Token("NUMBER", "2", 4, 9),
+                Token("ARITHOP", "+", 4, 10),
+                Token("NUMBER", "1", 4, 11),
+                Token("ARITHOP", "-", 4, 12),
+                Token("NUMBER", "5", 4, 13),
+                Token("RPAREN", ")", 4, 14),
+                Token("NEWLINE", "\n", 4, 15),
+            ])
+        self.assertRaises(ParserError, inner)
 
 
 if __name__ == '__main__':

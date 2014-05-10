@@ -199,12 +199,14 @@ class Parser(object):
                 op_stack.append(self.token)
 
             elif self.token.typ == "RPAREN":
-                # TODO: handle prematurely running out of tokens on the op_stack
-                peek = op_stack[-1]
-                while peek.typ != "LPAREN":
-                    op_stack.pop()
-                    expr.append(PArith(op=peek.value))
+                try:
                     peek = op_stack[-1]
+                    while peek.typ != "LPAREN":
+                        op_stack.pop()
+                        expr.append(PArith(op=peek.value))
+                        peek = op_stack[-1]
+                except IndexError:
+                    pass
 
                 # now the stack is either empty or has LPAREN at the top
                 if len(op_stack) > 0:

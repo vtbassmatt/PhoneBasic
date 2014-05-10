@@ -46,7 +46,8 @@ class Opcode(object):
     HALT        = 255
 
 
-TContext = collections.namedtuple('TContext', ['label_table', 'string_table', 'code'])
+TContext = collections.namedtuple('TContext',
+    ['label_table', 'string_table', 'code'])
 
 
 def translate(ast):
@@ -92,8 +93,10 @@ def codegen_let(op, ctx):
 
     if type(op.rhs) == PExpr:
         codegen_expr(op.rhs, ctx)
+    elif type(op.rhs) == PString:
+        codegen_str(op.rhs, ctx)
     else:
-        raise NotImplementedError("LET statements for strings are not ready")
+        raise TranslatorError("don't know how to transform the RHS", op)
 
 def codegen_name(name, ctx):
     ctx.code.append(Opcode.NAME)
@@ -132,6 +135,11 @@ def codegen_expr(expr_token, ctx):
         else:
             # the given expression contained tokens we don't understand
             raise TranslatorError("unknown token type in expression", op)
+
+def codegen_str(str_token, ctx):
+    if type(str_token) != PString:
+        raise TranslatorError("expected a string literal to parse", str_token)
+    raise NotImplementedError("string literals not implemented")
 
 def codegen_read_var(op, ctx):
     if type(op) != PVar:

@@ -15,6 +15,7 @@ PInput  = collections.namedtuple('PInput', ['rhs'])
 PIf     = collections.namedtuple('PIf', ['expr1', 'compop', 'expr2', 'stmt'])
 PEnd    = collections.namedtuple('PEnd', [])
 PGoto   = collections.namedtuple('PGoto', ['id'])
+PString = collections.namedtuple('PString', ['value'])
 PExpr   = collections.namedtuple('PExpr', ['expr'])
 PVar    = collections.namedtuple('PVar', ['id'])
 PArith  = collections.namedtuple('PArith', ['op'])
@@ -95,35 +96,31 @@ class Parser(object):
         (var, assign) = (self.next(), self.next())
         if var.typ == "ID" and assign.typ == "ASSIGN":
             self.next()
-            return PLet(var.value, self.p_expr())
+            return PLet(var.value, self.p_expr_or_string())
         raise ParserError("error parsing LET statement", self.token)
 
     def m_print(self):
         print_vals = []
         self.next()
         while True:
-            if self.token.typ == "STRING":
-                print_vals.append(self.token.value)
-                self.next()
-                continue
-            elif self.token.typ == "COMMA":
+            if self.token.typ == "COMMA":
                 self.next()
                 continue
             elif self.token.typ == "NEWLINE":
                 break
             else:
-                print_vals.append(self.p_expr())
+                print_vals.append(self.p_expr_or_string())
                 continue
 
-        print_vals.append("\n")
+        print_vals.append(PString(value="\n"))
         return PPrint(print_vals)
 
     def m_if(self):
         self.next()
-        expr1 = self.p_expr()
+        expr1 = self.p_expr_or_string()
         compop = self.token
         self.next()
-        expr2 = self.p_expr()
+        expr2 = self.p_expr_or_string()
         then = self.token
         if compop.typ == "COMPOP" and then.typ == "THEN":
             self.next()
@@ -157,6 +154,14 @@ class Parser(object):
 
     def m_end(self):
         return PEnd()
+
+    def p_expr_or_string(self):
+        if self.token.typ == "STRING":
+            string_token = self.token
+            self.next()
+            return PString(string_token.value)
+        else:
+            return self.p_expr()
 
     def p_expr(self):
         """Parse an expression, beginning with the current token.

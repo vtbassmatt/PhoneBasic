@@ -2,7 +2,7 @@ import unittest
 import itertools
 from parser import parse, ParserError
 from parser import PClear, PLabel, PLet, PPrint, PIf, PGoto, PInput, PEnd
-from parser import PExpr, PNumber, PVar, PArith
+from parser import PExpr, PString, PNumber, PVar, PArith
 from lexer import Token
 
 class TestParser(unittest.TestCase):
@@ -15,9 +15,15 @@ class TestParser(unittest.TestCase):
             PClear(),
             PLabel(id='top'),
             PLet(id='a', rhs=PExpr(expr=[PNumber(value='25')])),
-            PPrint(rhs=['Hello world', PExpr(expr=[PNumber(value='27')]), '\n']),
-            PPrint(rhs=['Hello compiler', '\n']),
-            PIf(expr1=PExpr(expr=[PVar(id='a')]), compop='<', expr2=PExpr(expr=[PNumber(value='2')]), stmt=PPrint(rhs=['Less than 2', '\n'])),
+            PPrint(rhs=[PString(value='Hello world'),
+                        PExpr(expr=[PNumber(value='27')]),
+                        PString(value='\n')]),
+            PPrint(rhs=[PString(value='Hello compiler'), PString(value='\n')]),
+            PIf(expr1=PExpr(expr=[PVar(id='a')]),
+                            compop='<',
+                            expr2=PExpr(expr=[PNumber(value='2')]),
+                            stmt=PPrint(rhs=[PString(value='Less than 2'),
+                                             PString(value='\n')])),
             PGoto(id='top'),
             PInput(rhs=['a', 'b']),
             PEnd()

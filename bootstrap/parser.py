@@ -177,34 +177,51 @@ class Parser(object):
                 expr.append(PVar(id=self.token.value))
 
             elif self.token.typ == "ARITHOP":
-                o1 = self.token.typ
-                o1.la = operator_table[o1].left_associative
-                o1.p = operator_table[o1].precedence
-                o2 = op_stack[-1]
-                while peek.typ == "ARITHOP":
-                    o2.p = operator_table[o2].precedence
-                    if (o1.la and o1.p == o2.p) or o1.p < o2.p:
-                        op_stack.pop()
-                        expr.append(PArith(op=o2.value))
-                    else:
-                        break
+                o1 = self.token
+                o1la = operator_table[o1.value]["left_associative"]
+                o1p = operator_table[o1.value]["precedence"]
+                try:
                     o2 = op_stack[-1]
+                    while o2.typ == "ARITHOP":
+                        o2p = operator_table[o2.value]["precedence"]
+                        if (o1la and o1p == o2p) or o1p < o2p:
+                            op_stack.pop()
+                            expr.append(PArith(op=o2.value))
+                        else:
+                            break
+                        o2 = op_stack[-1]
+                except IndexError:
+                    # op_stack is empty
+                    pass
                 op_stack.append(o1)
 
             elif self.token.typ == "LPAREN":
-                op_stack.push(self.token)
+                op_stack.append(self.token)
 
             elif self.token.typ == "RPAREN":
-                # TODO: pop stuff and put on output queue until we hit a lparen
-                # TODO: pop lparen
-                # TODO: report an error if we empty the stack without finding lparen
+                # TODO: handle prematurely running out of tokens on the op_stack
+                peek = op_stack[-1]
+                while peek.typ != "LPAREN":
+                    op_stack.pop()
+                    expr.append(PArith(op=peek.value))
+                    peek = op_stack[-1]
+
+                # now the stack is either empty or has LPAREN at the top
+                if len(op_stack) > 0:
+                    op_stack.pop()
+                else:
+                    raise ParserError("mismatched parenthese, expected '('", self.token)
+
                 pass
 
             self.next()
 
-        # TODO: while still operator tokens in stack
-        # TODO: check if parenthesis: if so, mismatch
-        # TODO: otherwise, pop onto queue
+        while len(op_stack) > 0:
+            remaining_op = op_stack.pop()
+            if remaining_op.typ != "LPAREN":
+                expr.append(PArith(op=remaining_op.value))
+            else:
+                raise ParserError("mismatched parenthese, expected ')'", remaining_op)
 
         return PExpr(expr)
 
@@ -255,6 +272,18 @@ if __name__ == "__main__":
         Token("COMMA", ",", 9, 8),
         Token("ID", "b", 9, 10),
         Token("NEWLINE", "\n", 9, 11),
+
+        Token("LET", "LET", 10, 0),
+        Token("ID", "c", 10, 4),
+        Token("ASSIGN", "BE", 10, 6),
+        Token("ID", "a", 10, 9),
+        Token("ARITHOP", "+", 10, 10),
+        Token("LPAREN", "(", 10, 11),
+        Token("ID", "b", 10, 12),
+        Token("ARITHOP", "-", 10, 13),
+        Token("NUMBER", "1", 10, 14),
+        Token("RPAREN", ")", 10, 15),
+        Token("NEWLINE", "\n", 10, 16),
 
         Token("END", "END", 20, 0),
     ])

@@ -35,6 +35,12 @@ class Opcode(object):
     DELETENUM   = 24    # nummem[@(namereg)] unset
     #TODO: store and delete strings
 
+    # math
+    ADD         = 40
+    SUBTRACT    = 41
+    MULTIPLY    = 42
+    DIVIDE      = 43
+
     # make HALT really obvious
     HALT        = 255
 
@@ -102,6 +108,19 @@ def codegen_expr(expr_token, code):
                 code.append(float(op.value))
             else:
                 code.append(int(op.value))
+
+        elif type(op) == PArith:
+            if op.op == "+":
+                code.append(Opcode.ADD)
+            elif op.op == "-":
+                code.append(Opcode.SUBTRACT)
+            elif op.op == "*":
+                code.append(Opcode.MULTIPLY)
+            elif op.op == "/":
+                code.append(Opcode.DIVIDE)
+            else:
+                raise TranslatorError("unknown arithmetic operator", op)
+
         else:
             # TODO: handle operations and so forth
             pass
@@ -110,7 +129,7 @@ def codegen_expr(expr_token, code):
 if __name__ == "__main__":
     program_text = """CLEAR
     top:
-    LET a BE 25
+    LET a BE 25 + 2
     PRINT "Hello world", 27
     PRINT "Hello compiler"
     IF a < 2 THEN GOTO top

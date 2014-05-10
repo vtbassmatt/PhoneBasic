@@ -29,7 +29,7 @@ class Opcode(object):
 
     # working with data
     LITERAL     = 20    # [] => [@(IP)++]
-    NAME        = 21    # [a] => [], next 'a' bytes read into name register, IP+=a
+    NAME        = 21    # a = @(IP+1), next 'a' bytes read into name register, IP=IP+a+1
     STORENUM    = 22    # [a] => [], nummem[@(namereg)] = a
     RETRVNUM    = 23    # [] => [nummem[@(namereg)]]
     DELETENUM   = 24    # nummem[@(namereg)] unset
@@ -90,9 +90,8 @@ def codegen_let(op, code):
         raise NotImplementedError("LET statements for strings are not ready")
 
 def codegen_name(name, code):
-    code.append(Opcode.LITERAL)
-    code.append(len(name))
     code.append(Opcode.NAME)
+    code.append(len(name))
     for letter in name:
         code.append(ord(letter))
 
@@ -166,13 +165,14 @@ def disassemble(code):
             i += 1
             print addr(i) + "         ^"
 
-#         elif code[i] == Opcode.NAME:
-#             name = ""
-#             i += 1
-#             for letter in code[i:i+last_literal]:
-#                 name += chr(letter)
-#             print addr(i-1) + " NAME '" + name + "'"
-#             i += last_literal
+        elif code[i] == Opcode.NAME:
+            name = ""
+            i += 1
+            length = code[i]
+            for letter in code[i:i+length+1]:
+                name += chr(letter)
+            print addr(i-1) + " NAME '" + name + "'"
+            i += length
 
         elif code[i] == Opcode.STORENUM:
             print addr(i) + " STORENUM"
@@ -207,7 +207,7 @@ def disassemble(code):
 if __name__ == "__main__":
     program_text = """CLEAR
     top:
-    LET a BE 25 + b
+    LET abc BE 25 + b
     PRINT "Hello world", 27
     PRINT "Hello compiler"
     IF a < 2 THEN GOTO top

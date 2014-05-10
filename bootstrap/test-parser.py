@@ -72,12 +72,12 @@ class TestParser(unittest.TestCase):
 
     def test_expr_parser(self):
         """test the expression parser with a good case"""
-        # from the Shunting Yard page on wikipedia:
-        # 3 + 4 * 2 / ( 1 - 5 )
+        # adapted from the Shunting Yard page on wikipedia:
+        # 3 + b * 2 / ( 1 - 5 )
         expect = [
             PLet(id='a', rhs=PExpr(expr=[
                 PNumber(value='3'),
-                PNumber(value='4'),
+                PVar(id='b'),
                 PNumber(value='2'),
                 PArith(op='*'),
                 PNumber(value='1'),
@@ -94,7 +94,7 @@ class TestParser(unittest.TestCase):
             Token("ASSIGN", "BE", 4, 6),
             Token("NUMBER", "3", 4, 9),
             Token("ARITHOP", "+", 4, 10),
-            Token("NUMBER", "4", 4, 11),
+            Token("ID", "b", 4, 11),
             Token("ARITHOP", "*", 4, 12),
             Token("NUMBER", "2", 4, 13),
             Token("ARITHOP", "/", 4, 14),

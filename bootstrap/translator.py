@@ -63,6 +63,9 @@ def translate(ast):
             else:
                 raise NotImplementedError("back-references are not ready", op)
 
+        elif type(op) == PLet:
+            codegen_let(op, code)
+
         elif type(op) == PEnd:
             code.append(Opcode.HALT)
 
@@ -70,6 +73,38 @@ def translate(ast):
             code.append(Opcode.NOOP)
 
     return code
+
+
+def codegen_let(op, code):
+    codegen_name(op.id, code)
+
+    if type(op.rhs) == PExpr:
+        codegen_expr(op.rhs, code)
+    else:
+        raise NotImplementedError("LET statements for strings are not ready")
+
+def codegen_name(name, code):
+    code.append(Opcode.LITERAL)
+    code.append(len(name))
+    code.append(Opcode.NAME)
+    for letter in name:
+        code.append(ord(letter))
+
+def codegen_expr(expr_token, code):
+    # expressions expected in reverse polish notation
+    if type(expr_token) != PExpr:
+        raise TranslatorError("expected an expression to parse", expr_token)
+    for op in expr_token.expr:
+        if type(op) == PNumber:
+            # TODO: deal with numbers > 255 and actually deal with floats
+            code.append(Opcode.LITERAL)
+            if "." in op.value:
+                code.append(float(op.value))
+            else:
+                code.append(int(op.value))
+        else:
+            # TODO: handle operations and so forth
+            pass
 
 
 if __name__ == "__main__":

@@ -22,6 +22,8 @@ def tokenize(s):
         ('COMPOP',  r'<|<=|=|!=|=>|>'),    # Comparison operators
         ('COLON',   r':'),           # Colon (as in labels)
         ('COMMA',   r','),           # Comma (as in expression lists)
+        ('LPAREN',  r'\('),           # Left parenthesis
+        ('RPAREN',  r'\)'),           # Left parenthesis
         ('NEWLINE', r'\n'),          # Line endings
         ('SKIP',    r'[ \t]'),       # Skip over spaces and tabs
     ]
@@ -61,7 +63,7 @@ PRINT GREETING
 FirstLoop:
  PRINT ">"
  INPUT B
- PRINT B, " - 1 IS ", B - A
+ PRINT B, " - 1 IS ", (B - A)
 IF B IS 0 GOTO FirstLoop
 
 SecondLoop:

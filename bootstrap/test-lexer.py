@@ -51,6 +51,20 @@ class TestTokenize(unittest.TestCase):
             self.assertEqual(token.column, ex.column)
 
 
+    def test_paren(self):
+        expect = [
+            Token("LPAREN", "(", 1, 0),
+            Token("ID", "a", 1, 1),
+            Token("RPAREN", ")", 1, 2),
+        ]
+        tokens = tokenize("(a)")
+        for (token, ex) in itertools.izip(tokens, expect):
+            self.assertEqual(token.typ, ex.typ)
+            self.assertEqual(token.value, ex.value)
+            self.assertEqual(token.line, ex.line)
+            self.assertEqual(token.column, ex.column)
+
+
     def test_comment(self):
         expect = [
             Token("COMMENT", "//comment", 1, 0),
@@ -112,10 +126,12 @@ class TestTokenize(unittest.TestCase):
             Token(typ='COMMA', value=',', line=11, column=8),
             Token(typ='STRING', value=' - 1 IS ', line=11, column=10),
             Token(typ='COMMA', value=',', line=11, column=20),
-            Token(typ='ID', value='B', line=11, column=22),
-            Token(typ='ARITHOP', value='-', line=11, column=24),
-            Token(typ='ID', value='A', line=11, column=26),
-            Token(typ='NEWLINE', value='\n', line=11, column=27),
+            Token(typ='LPAREN', value='(', line=11, column=22),
+            Token(typ='ID', value='B', line=11, column=23),
+            Token(typ='ARITHOP', value='-', line=11, column=25),
+            Token(typ='ID', value='A', line=11, column=27),
+            Token(typ='RPAREN', value=')', line=11, column=28),
+            Token(typ='NEWLINE', value='\n', line=11, column=29),
             Token(typ='IF', value='IF', line=12, column=0),
             Token(typ='ID', value='B', line=12, column=3),
             Token(typ='ID', value='IS', line=12, column=5),
@@ -200,7 +216,7 @@ PRINT GREETING
 FirstLoop:
  PRINT ">"
  INPUT B
- PRINT B, " - 1 IS ", B - A
+ PRINT B, " - 1 IS ", (B - A)
 IF B IS 0 GOTO FirstLoop
 
 SecondLoop:

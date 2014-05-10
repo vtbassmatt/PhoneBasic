@@ -144,6 +144,26 @@ class TestParser(unittest.TestCase):
             ])
         self.assertRaises(ParserError, inner)
 
+    def test_expr_mismatch_3(self):
+        """paren mismatch 3"""
+        # 2 + (( 1 - 5 )
+        def inner():
+            parse([
+                Token("LET", "LET", 4, 0),
+                Token("ID", "a", 4, 4),
+                Token("ASSIGN", "BE", 4, 6),
+                Token("NUMBER", "2", 4, 9),
+                Token("ARITHOP", "+", 4, 10),
+                Token("LPAREN", "(", 4, 11),
+                Token("LPAREN", "(", 4, 12),
+                Token("NUMBER", "1", 4, 13),
+                Token("ARITHOP", "-", 4, 14),
+                Token("NUMBER", "5", 4, 15),
+                Token("RPAREN", ")", 4, 11),
+                Token("NEWLINE", "\n", 4, 17),
+            ])
+        self.assertRaises(ParserError, inner)
+
 
 if __name__ == '__main__':
     unittest.main()

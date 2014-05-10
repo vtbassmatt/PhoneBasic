@@ -212,7 +212,7 @@ class Parser(object):
                 if len(op_stack) > 0:
                     op_stack.pop()
                 else:
-                    raise ParserError("mismatched parenthese, expected '('", self.token)
+                    raise ParserError("mismatched parentheses, expected '('", self.token)
 
                 pass
 
@@ -223,7 +223,7 @@ class Parser(object):
             if remaining_op.typ != "LPAREN":
                 expr.append(PArith(op=remaining_op.value))
             else:
-                raise ParserError("mismatched parenthese, expected ')'", remaining_op)
+                raise ParserError("mismatched parentheses, expected ')'", remaining_op)
 
         return PExpr(expr)
 

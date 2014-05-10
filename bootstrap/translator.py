@@ -1,4 +1,5 @@
 import pprint
+import collections
 from lexer import tokenize
 from parser import parse, PClear, PLabel, PLet, PPrint, PIf, PGoto, PInput, PEnd
 from parser import PExpr, PVar, PNumber, PArith
@@ -45,93 +46,98 @@ class Opcode(object):
     HALT        = 255
 
 
+TContext = collections.namedtuple('TContext', ['label_table', 'string_table', 'code'])
+
+
 def translate(ast):
-    label_table = {}
-    string_table = {}
-    # by convention, put a magic number at the beginning
-    # for this case, "PB01" in ASCII
-    code = [ord("P"), ord("B"), ord("0"), ord("1")]
+    ctx = TContext(
+        label_table = {},
+        string_table = {},
+        # by convention, put a magic number at the beginning
+        # for this case, "PB01" in ASCII
+        code = [ord("P"), ord("B"), ord("0"), ord("1")]
+    )
 
     for op in ast:
         if type(op) == PClear:
-            code.append(Opcode.CLEAR)
+            ctx.code.append(Opcode.CLEAR)
 
         elif type(op) == PLabel:
-            if op.id in label_table:
+            if op.id in ctx.label_table:
                 raise TranslatorError("Label already exists", op.id)
-            label_table[op.id] = len(code)
+            ctx.label_table[op.id] = len(ctx.code)
 
         elif type(op) == PGoto:
-            if op.id in label_table:
-                code.append(Opcode.LITERAL)         # push a location on the stack
-                code.append(label_table[op.id])
-                code.append(Opcode.GOTO)            # jump to it
+            if op.id in ctx.label_table:
+                ctx.code.append(Opcode.LITERAL)         # push a location on the stack
+                ctx.code.append(ctx.label_table[op.id])
+                ctx.code.append(Opcode.GOTO)            # jump to it
             else:
                 raise NotImplementedError("back-references are not ready", op)
 
         elif type(op) == PLet:
-            codegen_let(op, code)
+            codegen_let(op, ctx)
 
         elif type(op) == PEnd:
-            code.append(Opcode.HALT)
+            ctx.code.append(Opcode.HALT)
 
         else:
-            code.append(Opcode.NOOP)
+            ctx.code.append(Opcode.NOOP)
 
-    return code
+    return ctx.code
 
 
-def codegen_let(op, code):
-    codegen_name(op.id, code)
+def codegen_let(op, ctx):
+    codegen_name(op.id, ctx)
 
     if type(op.rhs) == PExpr:
-        codegen_expr(op.rhs, code)
+        codegen_expr(op.rhs, ctx)
     else:
         raise NotImplementedError("LET statements for strings are not ready")
 
-def codegen_name(name, code):
-    code.append(Opcode.NAME)
-    code.append(len(name))
+def codegen_name(name, ctx):
+    ctx.code.append(Opcode.NAME)
+    ctx.code.append(len(name))
     for letter in name:
-        code.append(ord(letter))
+        ctx.code.append(ord(letter))
 
-def codegen_expr(expr_token, code):
+def codegen_expr(expr_token, ctx):
     # expressions expected in reverse polish notation
     if type(expr_token) != PExpr:
         raise TranslatorError("expected an expression to parse", expr_token)
     for op in expr_token.expr:
         if type(op) == PNumber:
             # TODO: deal with numbers > 255 and actually deal with floats
-            code.append(Opcode.LITERAL)
+            ctx.code.append(Opcode.LITERAL)
             if "." in op.value:
-                code.append(float(op.value))
+                ctx.code.append(float(op.value))
             else:
-                code.append(int(op.value))
+                ctx.code.append(int(op.value))
 
         elif type(op) == PArith:
             if op.op == "+":
-                code.append(Opcode.ADD)
+                ctx.code.append(Opcode.ADD)
             elif op.op == "-":
-                code.append(Opcode.SUBTRACT)
+                ctx.code.append(Opcode.SUBTRACT)
             elif op.op == "*":
-                code.append(Opcode.MULTIPLY)
+                ctx.code.append(Opcode.MULTIPLY)
             elif op.op == "/":
-                code.append(Opcode.DIVIDE)
+                ctx.code.append(Opcode.DIVIDE)
             else:
                 raise TranslatorError("unknown arithmetic operator", op)
 
         elif type(op) == PVar:
-            codegen_read_var(op, code)
+            codegen_read_var(op, ctx)
 
         else:
             # the given expression contained tokens we don't understand
             raise TranslatorError("unknown token type in expression", op)
 
-def codegen_read_var(op, code):
+def codegen_read_var(op, ctx):
     if type(op) != PVar:
         raise TranslatorError("expected a variable", op)
-    codegen_name(op.id, code)
-    code.append(Opcode.RETRVNUM)
+    codegen_name(op.id, ctx)
+    ctx.code.append(Opcode.RETRVNUM)
 
 
 # quick and dirty disassembler

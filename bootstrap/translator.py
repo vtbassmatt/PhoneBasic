@@ -121,15 +121,93 @@ def codegen_expr(expr_token, code):
             else:
                 raise TranslatorError("unknown arithmetic operator", op)
 
+        elif type(op) == PVar:
+            codegen_read_var(op, code)
+
         else:
-            # TODO: handle operations and so forth
-            pass
+            # the given expression contained tokens we don't understand
+            raise TranslatorError("unknown token type in expression", op)
+
+def codegen_read_var(op, code):
+    if type(op) != PVar:
+        raise TranslatorError("expected a variable", op)
+    codegen_name(op.id, code)
+    code.append(Opcode.RETRVNUM)
+
+
+# quick and dirty disassembler
+def disassemble(code):
+    def addr(a):
+        return "{:#04x}".format(a)
+
+    i = 4
+    print "Metadata: " + str([chr(a) for a in code[0:4]])
+    while i < len(code):
+        if code[i] == Opcode.NOOP:
+            print addr(i) + " NOOP"
+
+        elif code[i] == Opcode.CLEAR:
+            print addr(i) + " CLEAR"
+
+        elif code[i] == Opcode.PRINTNUM:
+            print addr(i) + " PRINTNUM"
+
+        elif code[i] == Opcode.PRINTLIT:
+            print addr(i) + " PRINTLIT"
+
+        elif code[i] == Opcode.PRINTSTR:
+            print addr(i) + " PRINTSTR"
+
+        elif code[i] == Opcode.GOTO:
+            print addr(i) + " GOTO"
+
+        elif code[i] == Opcode.LITERAL:
+            print addr(i) + " LITERAL " + str(code[i+1])
+            i += 1
+            print addr(i) + "         ^"
+
+#         elif code[i] == Opcode.NAME:
+#             name = ""
+#             i += 1
+#             for letter in code[i:i+last_literal]:
+#                 name += chr(letter)
+#             print addr(i-1) + " NAME '" + name + "'"
+#             i += last_literal
+
+        elif code[i] == Opcode.STORENUM:
+            print addr(i) + " STORENUM"
+
+        elif code[i] == Opcode.RETRVNUM:
+            print addr(i) + " RETRVNUM"
+
+        elif code[i] == Opcode.DELETENUM:
+            print addr(i) + " DELETENUM"
+
+        elif code[i] == Opcode.ADD:
+            print addr(i) + " ADD"
+
+        elif code[i] == Opcode.SUBTRACT:
+            print addr(i) + " SUBTRACT"
+
+        elif code[i] == Opcode.MULTIPLY:
+            print addr(i) + " MULTIPLY"
+
+        elif code[i] == Opcode.DIVIDE:
+            print addr(i) + " DIVIDE"
+
+        elif code[i] == Opcode.HALT:
+            print addr(i) + " HALT"
+
+        else:
+            print addr(i) + " ?? " + str(code[i])
+
+        i += 1
 
 
 if __name__ == "__main__":
     program_text = """CLEAR
     top:
-    LET a BE 25 + 2
+    LET a BE 25 + b
     PRINT "Hello world", 27
     PRINT "Hello compiler"
     IF a < 2 THEN GOTO top
@@ -146,3 +224,6 @@ if __name__ == "__main__":
     code = translate(ast)
     print "\nCode:"
     pprint.pprint(code)
+
+    print "\nDisassembly:"
+    disassemble(code)

@@ -1,6 +1,7 @@
 import unittest
 import itertools
-from parser import parse, PClear, PLabel, PLet, PPrint, PIf, PGoto, PExpr, PInput, PEnd
+from parser import parse, PClear, PLabel, PLet, PPrint, PIf, PGoto, PInput, PEnd
+from parser import PExpr, PNumber, PVar
 from lexer import Token
 
 class TestParser(unittest.TestCase):
@@ -12,10 +13,10 @@ class TestParser(unittest.TestCase):
         expect = [
             PClear(),
             PLabel(id='top'),
-            PLet(id='a', rhs=PExpr(expr='25')),
-            PPrint(rhs=['Hello world', PExpr(expr='27'), '\n']),
+            PLet(id='a', rhs=PExpr(expr=[PNumber(value='25')])),
+            PPrint(rhs=['Hello world', PExpr(expr=[PNumber(value='27')]), '\n']),
             PPrint(rhs=['Hello compiler', '\n']),
-            PIf(expr1=PExpr(expr='a'), compop='<', expr2=PExpr(expr='2'), stmt=PPrint(rhs=['Less than 2', '\n'])),
+            PIf(expr1=PExpr(expr=[PVar(id='a')]), compop='<', expr2=PExpr(expr=[PNumber(value='2')]), stmt=PPrint(rhs=['Less than 2', '\n'])),
             PGoto(id='top'),
             PInput(rhs=['a', 'b']),
             PEnd()

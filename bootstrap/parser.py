@@ -16,6 +16,17 @@ PIf     = collections.namedtuple('PIf', ['expr1', 'compop', 'expr2', 'stmt'])
 PEnd    = collections.namedtuple('PEnd', [])
 PGoto   = collections.namedtuple('PGoto', ['id'])
 PExpr   = collections.namedtuple('PExpr', ['expr'])
+PVar    = collections.namedtuple('PVar', ['id'])
+PArith  = collections.namedtuple('PArith', ['op'])
+PNumber = collections.namedtuple('PNumber', ['value'])
+
+
+operator_table = {
+    "*": { "precedence": 3, "left_associative": True },
+    "/": { "precedence": 3, "left_associative": True },
+    "+": { "precedence": 2, "left_associative": True },
+    "-": { "precedence": 2, "left_associative": True },
+}
 
 
 class Parser(object):
@@ -89,12 +100,14 @@ class Parser(object):
 
     def m_print(self):
         print_vals = []
+        self.next()
         while True:
-            self.next()
             if self.token.typ == "STRING":
                 print_vals.append(self.token.value)
+                self.next()
                 continue
             elif self.token.typ == "COMMA":
+                self.next()
                 continue
             elif self.token.typ == "NEWLINE":
                 break
@@ -108,10 +121,10 @@ class Parser(object):
     def m_if(self):
         self.next()
         expr1 = self.p_expr()
-        compop = self.next()
+        compop = self.token
         self.next()
         expr2 = self.p_expr()
-        then = self.next()
+        then = self.token
         if compop.typ == "COMPOP" and then.typ == "THEN":
             self.next()
             return PIf(expr1, compop.value, expr2, self.m_stmt())
@@ -146,11 +159,54 @@ class Parser(object):
         return PEnd()
 
     def p_expr(self):
-        """Parse an expression."""
-        allowed = ["NUMBER", "ID", "ARITHOP"]
+        """Parse an expression, beginning with the current token.
 
-        # TODO: read more than just the next token
-        return PExpr(self.token.value)
+        http://en.wikipedia.org/wiki/Shunting_yard_algorithm"""
+        global operator_table
+
+        allowed = ["NUMBER", "ID", "ARITHOP", "LPAREN", "RPAREN"]
+
+        op_stack = []
+        expr = []
+
+        while self.token.typ in allowed:
+            if self.token.typ == "NUMBER":
+                expr.append(PNumber(value=self.token.value))
+
+            elif self.token.typ == "ID":
+                expr.append(PVar(id=self.token.value))
+
+            elif self.token.typ == "ARITHOP":
+                o1 = self.token.typ
+                o1.la = operator_table[o1].left_associative
+                o1.p = operator_table[o1].precedence
+                o2 = op_stack[-1]
+                while peek.typ == "ARITHOP":
+                    o2.p = operator_table[o2].precedence
+                    if (o1.la and o1.p == o2.p) or o1.p < o2.p:
+                        op_stack.pop()
+                        expr.append(PArith(op=o2.value))
+                    else:
+                        break
+                    o2 = op_stack[-1]
+                op_stack.append(o1)
+
+            elif self.token.typ == "LPAREN":
+                op_stack.push(self.token)
+
+            elif self.token.typ == "RPAREN":
+                # TODO: pop stuff and put on output queue until we hit a lparen
+                # TODO: pop lparen
+                # TODO: report an error if we empty the stack without finding lparen
+                pass
+
+            self.next()
+
+        # TODO: while still operator tokens in stack
+        # TODO: check if parenthesis: if so, mismatch
+        # TODO: otherwise, pop onto queue
+
+        return PExpr(expr)
 
 
 def parse(tokens):

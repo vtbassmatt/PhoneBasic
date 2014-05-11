@@ -3,48 +3,11 @@ import collections
 from lexer import tokenize
 from parser import parse, PClear, PLabel, PLet, PPrint, PIf, PGoto, PInput, PEnd
 from parser import PExpr, PVar, PNumber, PArith, PString
+from vm import Opcode
 
 
 class TranslatorError(RuntimeError):
     pass
-
-
-class Opcode(object):
-    """Opcodes for this virtual machine.
-
-    It is a stack-based machine with only one register, the name register.
-
-    Numbers and strings are stored in tables separate from main memory,
-    they're accessed by certain opcodes using the name register."""
-
-    NOOP        = 0
-
-    # screen stuff
-    CLEAR       = 1
-    PRINTNUM    = 2     # nummem[@(namereg)] sent to output
-    PRINTNUMLIT = 3     # [a] => [], number 'a' sent to output
-    PRINTSTR    = 4     # strmem[@(namereg)] sent to output
-    PRINTSTRLIT = 5     # [a] => [], strtab[a] sent to output
-
-    # flow control
-    GOTO        = 10
-
-    # working with data
-    LITERAL     = 20    # [] => [@(IP)++]
-    NAME        = 21    # a = @(IP+1), next 'a' bytes read into name register, IP=IP+a+1
-    STORENUM    = 22    # [a] => [], nummem[@(namereg)] = a
-    RETRVNUM    = 23    # [] => [nummem[@(namereg)]]
-    DELETENUM   = 24    # nummem[@(namereg)] unset
-    STORESTR    = 25    # [a] => [], strmem[@(namereg)] = strtab[a]
-
-    # math
-    ADD         = 40
-    SUBTRACT    = 41
-    MULTIPLY    = 42
-    DIVIDE      = 43
-
-    # make HALT really obvious
-    HALT        = 255
 
 
 TContext = collections.namedtuple('TContext',
@@ -251,21 +214,9 @@ def disassemble(code):
 
 
 if __name__ == "__main__":
-    program_text = """CLEAR
-    top:
-    LET abc BE 25 + b
-    LET q1 BE "Wow"
-    LET q2 BE "Amaze"
-    PRINT "Hello world", 27
-    PRINT "Hello compiler"
-    IF a < 2 THEN GOTO top
-    PRINT "Passed the goto!"
-    INPUT a, b
-    END
-    GOTO top
-    """
+    from samples import sample_prog
 
-    ast = parse(tokenize(program_text))
+    ast = parse(tokenize(sample_prog))
     print "AST:"
     pprint.pprint(ast)
 

@@ -65,10 +65,15 @@ def codegen_stmt(op, ctx):
 def codegen_if(op, ctx):
     if type(op) != PIf:
         raise TranslatorError("expected an if statement", op)
-    codegen_expr(op.expr1, ctx)
     codegen_expr(op.expr2, ctx)
-    # TODO: work with compops other than equals
-    ctx.code.append(Opcode.EQUAL)
+    codegen_expr(op.expr1, ctx)
+    if op.compop == "=":
+        ctx.code.append(Opcode.EQUAL)
+    elif op.compop == "<":
+        ctx.code.append(Opcode.LT)
+    elif op.compop == "<=":
+        ctx.code.append(Opcode.LTE)
+    # TODO: deal with !=, >, and >=
     label = "$IF_" + str(len(ctx.code))
     codegen_label_address(label, ctx)
     ctx.code.append(Opcode.JUMPIF0)
@@ -248,6 +253,12 @@ def disassemble(code):
 
         elif code[i] == Opcode.EQUAL:
             print addr(i) + " EQUAL"
+
+        elif code[i] == Opcode.LT:
+            print addr(i) + " LT"
+
+        elif code[i] == Opcode.LTE:
+            print addr(i) + " LTE"
 
         elif code[i] == Opcode.HALT:
             print addr(i) + " HALT"

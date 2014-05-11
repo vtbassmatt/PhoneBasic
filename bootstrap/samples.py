@@ -7,10 +7,9 @@ PRINT "abc"
 LET q1 BE "Wow"
 LET q2 BE "Amaze"
 PRINT "Hello world", 27
-//GOTO bottom
 PRINT "Hello compiler"
-IF a = 1 THEN GOTO top
-PRINT "Passed the goto!"
+PRINT "a =", a
+IF a < 1 THEN PRINT "a is less than 1"
 //INPUT a, b
 bottom:
 END

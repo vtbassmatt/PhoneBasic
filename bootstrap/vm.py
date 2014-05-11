@@ -15,7 +15,9 @@ class Opcode(object):
     It is a stack-based machine with only one register, the name register.
 
     Numbers and strings are stored in tables separate from main memory,
-    they're accessed by certain opcodes using the name register."""
+    they're accessed by certain opcodes using the name register.
+
+    In the notes, top of stack is on the right"""
 
     NOOP        = 0
 
@@ -45,7 +47,9 @@ class Opcode(object):
     DIVIDE      = 43
 
     # compare
-    EQUAL       = 50    # [a, b] => [1] if a==b, [0] otherwise
+    EQUAL       = 50    # [b, a] => [1] if a==b, [0] otherwise
+    LT          = 51    # [b, a] => [1] if a<b, [0] otherwise
+    LTE         = 52    # [b, a] => [1] if a<=b, [0] otherwise
 
     # make HALT really obvious
     HALT        = 255
@@ -112,6 +116,22 @@ class BasicVM(object):
             op1 = self.STACK.pop()
             op2 = self.STACK.pop()
             if op1 == op2:
+                self.STACK.append(1)
+            else:
+                self.STACK.append(0)
+
+        elif op == Opcode.LT:
+            op1 = self.STACK.pop()
+            op2 = self.STACK.pop()
+            if op1 < op2:
+                self.STACK.append(1)
+            else:
+                self.STACK.append(0)
+
+        elif op == Opcode.LTE:
+            op1 = self.STACK.pop()
+            op2 = self.STACK.pop()
+            if op1 <= op2:
                 self.STACK.append(1)
             else:
                 self.STACK.append(0)

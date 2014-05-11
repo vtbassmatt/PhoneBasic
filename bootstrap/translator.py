@@ -29,7 +29,7 @@ def translate(ast):
 
         elif type(op) == PLabel:
             if op.id in ctx.label_table:
-                raise TranslatorError("Label already exists", op.id)
+                raise TranslatorError("label already exists", op.id)
             ctx.label_table[op.id] = len(ctx.code)
 
         elif type(op) == PGoto:
@@ -38,7 +38,7 @@ def translate(ast):
                 ctx.code.append(ctx.label_table[op.id])
                 ctx.code.append(Opcode.GOTO)            # jump to it
             else:
-                raise NotImplementedError("back-references are not ready", op)
+                raise NotImplementedError("forward-references are not ready", op)
 
         elif type(op) == PLet:
             codegen_let(op, ctx)

@@ -1,4 +1,5 @@
 import os
+import pprint
 
 def real_clear():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -50,6 +51,10 @@ class BasicVM(object):
     def __init__(self):
         self.code = None
         self.string_table = None
+        self.debugger = False
+
+    def SetDebugger(self, debug):
+        self.debugger = debug
 
     def Load(self, code, string_table):
         self.code = code
@@ -60,14 +65,20 @@ class BasicVM(object):
         self.IP = 4     # skip metadata
         self.STACK = []
         self.NAME_REG = None
-        self.VARS = {}
+        self.NUMVARS = {}
+        self.STRVARS = {}
         self.halted = False
 
     def Step(self):
         op = self.code[self.IP]
+        if self.debugger:
+            print "opcode =",op
 
         if op == Opcode.CLEAR:
-            real_clear()
+            if self.debugger:
+                print "{clearscreen}"
+            else:
+                real_clear()
 
         elif op == Opcode.LITERAL:
             self.STACK.append(self.code[self.IP + 1])
@@ -78,13 +89,12 @@ class BasicVM(object):
             name = "".join([chr(i) for i in
                 self.code[self.IP + 2:self.IP + 2 + name_len]])
             self.NAME_REG = name
-            self.IP += 2 + name_len
+            self.IP += 1 + name_len
 
         elif op == Opcode.RETRVNUM:
             name = self.NAME_REG
-            if name in self.VARS:
-                val = self.VARS[name]
-                # TODO: check if numeric or string
+            if name in self.NUMVARS:
+                val = self.NUMVARS[name]
                 self.STACK.append(val)
             else:
                 raise VmError("variable is not defined", name)
@@ -95,7 +105,11 @@ class BasicVM(object):
             self.STACK.append(op1 + op2)
 
         elif op == Opcode.STORENUM:
-            self.VARS[self.NAME_REG] = self.STACK.pop()
+            self.NUMVARS[self.NAME_REG] = self.STACK.pop()
+
+        elif op == Opcode.STORESTR:
+            index = self.STACK.pop()
+            self.STRVARS[self.NAME_REG] = self.string_table[index]
 
         elif op == Opcode.PRINTSTRLIT:
             index = self.STACK.pop()
@@ -113,9 +127,23 @@ class BasicVM(object):
 
         self.IP += 1
 
+    def PrintState(self):
+        pprint.pprint({
+            "IP": self.IP,
+            "STACK": self.STACK,
+            "NAME_REG": self.NAME_REG,
+            "NUMs": self.NUMVARS,
+            "STRs": self.STRVARS,
+            "HALTed": self.halted,
+        })
+
     def Run(self):
+        if(self.debugger):
+            self.PrintState()
         while not self.halted:
             self.Step()
+            if(self.debugger):
+                self.PrintState()
 
 
 if __name__ == "__main__":
@@ -128,4 +156,5 @@ if __name__ == "__main__":
 
     vm = BasicVM()
     vm.Load(code, strings)
+    #vm.SetDebugger(True)
     vm.Run()

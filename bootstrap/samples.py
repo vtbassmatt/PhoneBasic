@@ -3,7 +3,7 @@ sample_prog = """CLEAR
 LET abc BE 25 + 2
 PRINT abc
 PRINT "abc"
-//LET q1 BE "Wow"
+LET q1 BE "Wow"
 //LET q2 BE "Amaze"
 //PRINT "Hello world", 27
 //PRINT "Hello compiler"

@@ -22,14 +22,14 @@ class Opcode(object):
     NOOP        = 0
 
     # screen stuff
-    CLEAR       = 1
+    CLEAR       = 1     # clear the screen
     PRINTNUM    = 2     # nummem[@(namereg)] sent to output
     PRINTNUMLIT = 3     # [a] => [], number 'a' sent to output
     PRINTSTR    = 4     # strmem[@(namereg)] sent to output
     PRINTSTRLIT = 5     # [a] => [], strtab[a] sent to output
 
     # flow control
-    GOTO        = 10
+    GOTO        = 10    # [addr] => [], jumps to addr
     JUMPIF0     = 11    # [a, addr] => [], jumps to addr if a==0
 
     # working with data
@@ -41,15 +41,18 @@ class Opcode(object):
     STORESTR    = 25    # [a] => [], strmem[@(namereg)] = strtab[a]
 
     # math
-    ADD         = 40
-    SUBTRACT    = 41
-    MULTIPLY    = 42
-    DIVIDE      = 43
+    ADD         = 40    # [b, a] => [a+b]
+    SUBTRACT    = 41    # [b, a] => [a-b]
+    MULTIPLY    = 42    # [b, a] => [a*b]
+    DIVIDE      = 43    # [b, a] => [a/b]
 
     # compare
     EQUAL       = 50    # [b, a] => [1] if a==b, [0] otherwise
     LT          = 51    # [b, a] => [1] if a<b, [0] otherwise
     LTE         = 52    # [b, a] => [1] if a<=b, [0] otherwise
+    NEQUAL      = 50    # [b, a] => [1] if a!=b, [0] otherwise
+    GT          = 51    # [b, a] => [1] if a>b, [0] otherwise
+    GTE         = 52    # [b, a] => [1] if a>=b, [0] otherwise
 
     # make HALT really obvious
     HALT        = 255

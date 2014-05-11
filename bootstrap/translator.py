@@ -63,22 +63,33 @@ def codegen_stmt(op, ctx):
         ctx.code.append(Opcode.NOOP)
 
 def codegen_if(op, ctx):
+    # TODO: think about whether AND, OR, and NOT are important
     if type(op) != PIf:
         raise TranslatorError("expected an if statement", op)
     codegen_expr(op.expr2, ctx)
     codegen_expr(op.expr1, ctx)
-    if op.compop == "=":
-        ctx.code.append(Opcode.EQUAL)
-    elif op.compop == "<":
-        ctx.code.append(Opcode.LT)
-    elif op.compop == "<=":
-        ctx.code.append(Opcode.LTE)
-    # TODO: deal with !=, >, and >=
+    codegen_compop(op.compop, ctx)
     label = "$IF_" + str(len(ctx.code))
     codegen_label_address(label, ctx)
     ctx.code.append(Opcode.JUMPIF0)
     codegen_stmt(op.stmt, ctx)
     codegen_label(label, ctx)
+
+def codegen_compop(compop, ctx):
+    if compop == "=":
+        ctx.code.append(Opcode.EQUAL)
+    elif compop == "<":
+        ctx.code.append(Opcode.LT)
+    elif compop == "<=":
+        ctx.code.append(Opcode.LTE)
+    elif compop == "!=":
+        ctx.code.append(Opcode.NEQUAL)
+    elif compop == ">":
+        ctx.code.append(Opcode.GT)
+    elif compop == ">=":
+        ctx.code.append(Opcode.GTE)
+    else:
+        raise TranslatorError("unexpected compare operator", compop)
 
 def codegen_label(label, ctx):
     if label in ctx.label_table:
@@ -254,6 +265,15 @@ def disassemble(code):
 
         elif code[i] == Opcode.LTE:
             print addr(i) + " LTE"
+
+        elif code[i] == Opcode.NEQUAL:
+            print addr(i) + " NEQUAL"
+
+        elif code[i] == Opcode.LT:
+            print addr(i) + " GT"
+
+        elif code[i] == Opcode.LTE:
+            print addr(i) + " GTE"
 
         elif code[i] == Opcode.HALT:
             print addr(i) + " HALT"

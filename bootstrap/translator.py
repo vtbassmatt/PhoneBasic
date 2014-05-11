@@ -25,29 +25,11 @@ def translate(ast):
     )
 
     for op in ast:
-        if type(op) == PClear:
-            ctx.code.append(Opcode.CLEAR)
-
-        elif type(op) == PLabel:
+        if type(op) == PLabel:
             codegen_label(op.id, ctx)
 
-        elif type(op) == PGoto:
-            codegen_goto(op.id, ctx)
-
-        elif type(op) == PLet:
-            codegen_let(op, ctx)
-
-        elif type(op) == PPrint:
-            codegen_print(op, ctx)
-
-        elif type(op) == PIf:
-            codegen_if(op, ctx)
-
-        elif type(op) == PEnd:
-            ctx.code.append(Opcode.HALT)
-
         else:
-            ctx.code.append(Opcode.NOOP)
+            codegen_stmt(op, ctx)
 
     # fix GOTO back-refs
     while len(ctx.label_fixups) > 0:
@@ -57,6 +39,28 @@ def translate(ast):
 
     return (ctx.code, ctx.string_table)
 
+
+def codegen_stmt(op, ctx):
+    if type(op) == PClear:
+        ctx.code.append(Opcode.CLEAR)
+
+    elif type(op) == PGoto:
+        codegen_goto(op.id, ctx)
+
+    elif type(op) == PLet:
+        codegen_let(op, ctx)
+
+    elif type(op) == PPrint:
+        codegen_print(op, ctx)
+
+    elif type(op) == PIf:
+        codegen_if(op, ctx)
+
+    elif type(op) == PEnd:
+        ctx.code.append(Opcode.HALT)
+
+    else:
+        ctx.code.append(Opcode.NOOP)
 
 def codegen_if(op, ctx):
     if type(op) != PIf:
@@ -68,7 +72,7 @@ def codegen_if(op, ctx):
     label = "$IF_" + str(len(ctx.code))
     codegen_label_address(label, ctx)
     ctx.code.append(Opcode.JUMPIF0)
-    # TODO: translate the statement
+    codegen_stmt(op.stmt, ctx)
     codegen_label(label, ctx)
 
 def codegen_label(label, ctx):
@@ -205,9 +209,9 @@ def disassemble(code):
             print addr(i) + " JUMPIF0"
 
         elif code[i] == Opcode.LITERAL:
-            print addr(i) + " LITERAL " + str(code[i+1])
+            print addr(i) + " LITERAL", code[i+1], "/", hex(code[i+1])
             i += 1
-            print addr(i) + "         ^"
+            print addr(i) + "         ^^^"
 
         elif code[i] == Opcode.NAME:
             name = ""

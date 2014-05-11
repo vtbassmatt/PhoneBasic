@@ -21,7 +21,7 @@ def translate(ast):
         string_table = [],
         # by convention, put a magic number at the beginning
         # for this case, "PB01" in ASCII
-        code = [ord("P"), ord("B"), ord("0"), ord("1")]
+        code = bytearray([ord("P"), ord("B"), ord("0"), ord("1")])
     )
 
     for op in ast:

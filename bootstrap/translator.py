@@ -86,18 +86,13 @@ def codegen_label(label, ctx):
     ctx.label_table[label] = len(ctx.code)
 
 def codegen_goto(label, ctx):
-    if label in ctx.label_table:
-        ctx.code.append(Opcode.LITERAL)         # push a location on the stack
-        ctx.code.append(ctx.label_table[label])
-        ctx.code.append(Opcode.GOTO)            # jump to it
-    else:
-        codegen_label_address(label, ctx)
-        ctx.code.append(Opcode.GOTO)            # jump to it
+    codegen_label_address(label, ctx)       # we'll figure out the address later
+    ctx.code.append(Opcode.GOTO)            # jump to it
 
 def codegen_label_address(label, ctx):
-        ctx.code.append(Opcode.LITERAL)         # push a location on the stack
-        ctx.label_fixups.append((label,len(ctx.code)))
-        ctx.code.append(99)                     # placeholder
+    ctx.code.append(Opcode.LITERAL)         # push a location on the stack
+    ctx.label_fixups.append((label,len(ctx.code)))
+    ctx.code.append(99)                     # placeholder
 
 def codegen_print(op, ctx):
     if type(op) != PPrint:
@@ -277,8 +272,8 @@ if __name__ == "__main__":
     pprint.pprint(ast)
 
     (code, strings) = translate(ast)
-    print "\nCode:"
-    pprint.pprint(code)
+    #print "\nCode:"
+    #pprint.pprint(code)
     print "\nStrings:"
     pprint.pprint(strings)
 

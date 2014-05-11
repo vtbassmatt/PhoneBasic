@@ -1,3 +1,12 @@
+import os
+
+def real_clear():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+
+class VmError(RuntimeError):
+    pass
+
 
 class Opcode(object):
     """Opcodes for this virtual machine.
@@ -48,14 +57,54 @@ class BasicVM(object):
         self.Reset()
 
     def Reset(self):
-        self.IP = 0
+        self.IP = 4     # skip metadata
+        self.STACK = []
         self.NAME_REG = None
         self.VARS = {}
         self.halted = False
 
     def Step(self):
-        # TODO
-        self.halted = True
+        op = self.code[self.IP]
+
+        if op == Opcode.CLEAR:
+            real_clear()
+
+        elif op == Opcode.LITERAL:
+            self.STACK.append(self.code[self.IP + 1])
+            self.IP += 1
+
+        elif op == Opcode.NAME:
+            name_len = self.code[self.IP + 1]
+            name = "".join([chr(i) for i in
+                self.code[self.IP + 2:self.IP + 2 + name_len]])
+            self.NAME_REG = name
+            self.IP += 2 + name_len
+
+        elif op == Opcode.RETRVNUM:
+            name = self.NAME_REG
+            if name in self.VARS:
+                val = self.VARS[name]
+                # TODO: check if numeric or string
+                self.STACK.append(val)
+            else:
+                raise VmError("variable is not defined", name)
+
+        elif op == Opcode.ADD:
+            op1 = self.STACK.pop()
+            op2 = self.STACK.pop()
+            self.STACK.append(op1 + op2)
+
+        elif op == Opcode.STORENUM:
+            self.VARS[self.NAME_REG] = self.STACK.pop()
+
+        elif op == Opcode.PRINTSTRLIT:
+            index = self.STACK.pop()
+            print self.string_table[index],
+
+        elif op == Opcode.HALT:
+            self.halted = True
+
+        self.IP += 1
 
     def Run(self):
         while not self.halted:

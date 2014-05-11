@@ -128,7 +128,7 @@ def codegen_str(str_token, ctx):
         ctx.code.append(ctx.string_table.index(str_token.value))
     else:
         ctx.string_table.append(str_token.value)
-        ctx.code.append(len(ctx.string_table))
+        ctx.code.append(len(ctx.string_table)-1)
 
 def codegen_read_var(op, ctx):
     if type(op) != PVar:

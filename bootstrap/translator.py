@@ -22,8 +22,9 @@ class Opcode(object):
     # screen stuff
     CLEAR       = 1
     PRINTNUM    = 2     # nummem[@(namereg)] sent to output
-    PRINTLIT    = 3     # [a] => [], number 'a' sent to output
+    PRINTNUMLIT = 3     # [a] => [], number 'a' sent to output
     PRINTSTR    = 4     # strmem[@(namereg)] sent to output
+    PRINTSTRLIT = 5     # [a] => [], strtab[a] sent to output
 
     # flow control
     GOTO        = 10
@@ -79,6 +80,9 @@ def translate(ast):
         elif type(op) == PLet:
             codegen_let(op, ctx)
 
+        elif type(op) == PPrint:
+            codegen_print(op, ctx)
+
         elif type(op) == PEnd:
             ctx.code.append(Opcode.HALT)
 
@@ -87,6 +91,17 @@ def translate(ast):
 
     return (ctx.code, ctx.string_table)
 
+
+def codegen_print(op, ctx):
+    if type(op) != PPrint:
+        raise TranslatorError("expected a print statement", op)
+    for printable in op.rhs:
+        if type(printable) == PString:
+            codegen_str(printable, ctx)
+            ctx.code.append(Opcode.PRINTSTRLIT)
+        elif type(printable) == PExpr:
+            # TODO: handle expressions
+            pass
 
 def codegen_let(op, ctx):
     name = op.id
@@ -143,10 +158,14 @@ def codegen_expr(expr_token, ctx):
 def codegen_str(str_token, ctx):
     if type(str_token) != PString:
         raise TranslatorError("expected a string literal to parse", str_token)
-    # really naive implementation - should check for dupes
-    ctx.string_table.append(str_token.value)
+
+    # tries not to include dupe strings
     ctx.code.append(Opcode.LITERAL)
-    ctx.code.append(len(ctx.string_table))
+    if str_token.value in ctx.string_table:
+        ctx.code.append(ctx.string_table.index(str_token.value))
+    else:
+        ctx.string_table.append(str_token.value)
+        ctx.code.append(len(ctx.string_table))
 
 def codegen_read_var(op, ctx):
     if type(op) != PVar:
@@ -172,11 +191,14 @@ def disassemble(code):
         elif code[i] == Opcode.PRINTNUM:
             print addr(i) + " PRINTNUM"
 
-        elif code[i] == Opcode.PRINTLIT:
-            print addr(i) + " PRINTLIT"
+        elif code[i] == Opcode.PRINTNUMLIT:
+            print addr(i) + " PRINTNUMLIT"
 
         elif code[i] == Opcode.PRINTSTR:
             print addr(i) + " PRINTSTR"
+
+        elif code[i] == Opcode.PRINTSTRLIT:
+            print addr(i) + " PRINTSTRLIT"
 
         elif code[i] == Opcode.GOTO:
             print addr(i) + " GOTO"

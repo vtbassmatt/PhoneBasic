@@ -2,7 +2,7 @@ import pprint
 import collections
 from lexer import tokenize
 from parser import parse, PClear, PLabel, PLet, PPrint, PIf, PGoto, PInput, PEnd
-from parser import PExpr, PVar, PNumber, PArith
+from parser import PExpr, PVar, PNumber, PArith, PString
 
 
 class TranslatorError(RuntimeError):
@@ -34,7 +34,7 @@ class Opcode(object):
     STORENUM    = 22    # [a] => [], nummem[@(namereg)] = a
     RETRVNUM    = 23    # [] => [nummem[@(namereg)]]
     DELETENUM   = 24    # nummem[@(namereg)] unset
-    #TODO: store and delete strings
+    STORESTR    = 25    # [a] => [], strmem[@(namereg)] = strtab[a]
 
     # math
     ADD         = 40
@@ -53,7 +53,7 @@ TContext = collections.namedtuple('TContext',
 def translate(ast):
     ctx = TContext(
         label_table = {},
-        string_table = {},
+        string_table = [],
         # by convention, put a magic number at the beginning
         # for this case, "PB01" in ASCII
         code = [ord("P"), ord("B"), ord("0"), ord("1")]
@@ -85,16 +85,20 @@ def translate(ast):
         else:
             ctx.code.append(Opcode.NOOP)
 
-    return ctx.code
+    return (ctx.code, ctx.string_table)
 
 
 def codegen_let(op, ctx):
-    codegen_name(op.id, ctx)
+    name = op.id
 
     if type(op.rhs) == PExpr:
         codegen_expr(op.rhs, ctx)
+        codegen_name(name, ctx)
+        ctx.code.append(Opcode.STORENUM)
     elif type(op.rhs) == PString:
         codegen_str(op.rhs, ctx)
+        codegen_name(name, ctx)
+        ctx.code.append(Opcode.STORESTR)
     else:
         raise TranslatorError("don't know how to transform the RHS", op)
 
@@ -139,7 +143,10 @@ def codegen_expr(expr_token, ctx):
 def codegen_str(str_token, ctx):
     if type(str_token) != PString:
         raise TranslatorError("expected a string literal to parse", str_token)
-    raise NotImplementedError("string literals not implemented")
+    # really naive implementation - should check for dupes
+    ctx.string_table.append(str_token.value)
+    ctx.code.append(Opcode.LITERAL)
+    ctx.code.append(len(ctx.string_table))
 
 def codegen_read_var(op, ctx):
     if type(op) != PVar:
@@ -197,6 +204,9 @@ def disassemble(code):
         elif code[i] == Opcode.DELETENUM:
             print addr(i) + " DELETENUM"
 
+        elif code[i] == Opcode.STORESTR:
+            print addr(i) + " STORESTR"
+
         elif code[i] == Opcode.ADD:
             print addr(i) + " ADD"
 
@@ -222,6 +232,8 @@ if __name__ == "__main__":
     program_text = """CLEAR
     top:
     LET abc BE 25 + b
+    LET q1 BE "Wow"
+    LET q2 BE "Amaze"
     PRINT "Hello world", 27
     PRINT "Hello compiler"
     IF a < 2 THEN GOTO top
@@ -235,9 +247,11 @@ if __name__ == "__main__":
     print "AST:"
     pprint.pprint(ast)
 
-    code = translate(ast)
+    (code, strings) = translate(ast)
     print "\nCode:"
     pprint.pprint(code)
+    print "\nStrings:"
+    pprint.pprint(strings)
 
     print "\nDisassembly:"
     disassemble(code)

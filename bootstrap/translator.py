@@ -11,12 +11,13 @@ class TranslatorError(RuntimeError):
 
 
 TContext = collections.namedtuple('TContext',
-    ['label_table', 'string_table', 'code'])
+    ['label_table', 'string_table', 'code', 'label_fixups'])
 
 
 def translate(ast):
     ctx = TContext(
         label_table = {},
+        label_fixups = [],
         string_table = [],
         # by convention, put a magic number at the beginning
         # for this case, "PB01" in ASCII
@@ -38,7 +39,10 @@ def translate(ast):
                 ctx.code.append(ctx.label_table[op.id])
                 ctx.code.append(Opcode.GOTO)            # jump to it
             else:
-                raise NotImplementedError("forward-references are not ready", op)
+                ctx.code.append(Opcode.LITERAL)         # push a location on the stack
+                ctx.label_fixups.append((op.id,len(ctx.code)))
+                ctx.code.append(99)                     # placeholder
+                ctx.code.append(Opcode.GOTO)            # jump to it
 
         elif type(op) == PLet:
             codegen_let(op, ctx)
@@ -51,6 +55,12 @@ def translate(ast):
 
         else:
             ctx.code.append(Opcode.NOOP)
+
+    # fix GOTO back-refs
+    while len(ctx.label_fixups) > 0:
+        (label,addr) = ctx.label_fixups.pop()
+        label_addr = ctx.label_table[label]
+        ctx.code[addr] = label_addr
 
     return (ctx.code, ctx.string_table)
 

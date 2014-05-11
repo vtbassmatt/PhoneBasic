@@ -119,6 +119,9 @@ class BasicVM(object):
             val = self.STACK.pop()
             print val,
 
+        elif op == Opcode.GOTO:
+            self.IP = self.STACK.pop() - 1  # the 1 gets added back below
+
         elif op == Opcode.HALT:
             self.halted = True
 

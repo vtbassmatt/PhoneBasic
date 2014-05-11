@@ -9,7 +9,7 @@ LET q2 BE "Amaze"
 PRINT "Hello world", 27
 GOTO bottom
 PRINT "Hello compiler"
-//IF a < 2 THEN GOTO top
+IF a = 1 THEN GOTO top
 //PRINT "Passed the goto!"
 //INPUT a, b
 bottom:

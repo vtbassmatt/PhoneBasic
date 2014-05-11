@@ -29,26 +29,19 @@ def translate(ast):
             ctx.code.append(Opcode.CLEAR)
 
         elif type(op) == PLabel:
-            if op.id in ctx.label_table:
-                raise TranslatorError("label already exists", op.id)
-            ctx.label_table[op.id] = len(ctx.code)
+            codegen_label(op.id, ctx)
 
         elif type(op) == PGoto:
-            if op.id in ctx.label_table:
-                ctx.code.append(Opcode.LITERAL)         # push a location on the stack
-                ctx.code.append(ctx.label_table[op.id])
-                ctx.code.append(Opcode.GOTO)            # jump to it
-            else:
-                ctx.code.append(Opcode.LITERAL)         # push a location on the stack
-                ctx.label_fixups.append((op.id,len(ctx.code)))
-                ctx.code.append(99)                     # placeholder
-                ctx.code.append(Opcode.GOTO)            # jump to it
+            codegen_goto(op.id, ctx)
 
         elif type(op) == PLet:
             codegen_let(op, ctx)
 
         elif type(op) == PPrint:
             codegen_print(op, ctx)
+
+        elif type(op) == PIf:
+            codegen_if(op, ctx)
 
         elif type(op) == PEnd:
             ctx.code.append(Opcode.HALT)
@@ -65,6 +58,38 @@ def translate(ast):
     return (ctx.code, ctx.string_table)
 
 
+def codegen_if(op, ctx):
+    if type(op) != PIf:
+        raise TranslatorError("expected an if statement", op)
+    codegen_expr(op.expr1, ctx)
+    codegen_expr(op.expr2, ctx)
+    # TODO: work with compops other than equals
+    ctx.code.append(Opcode.EQUAL)
+    label = "$IF_" + str(len(ctx.code))
+    codegen_label_address(label, ctx)
+    ctx.code.append(Opcode.JUMPIF0)
+    # TODO: translate the statement
+    codegen_label(label, ctx)
+
+def codegen_label(label, ctx):
+    if label in ctx.label_table:
+        raise TranslatorError("label already exists", label)
+    ctx.label_table[label] = len(ctx.code)
+
+def codegen_goto(label, ctx):
+    if label in ctx.label_table:
+        ctx.code.append(Opcode.LITERAL)         # push a location on the stack
+        ctx.code.append(ctx.label_table[label])
+        ctx.code.append(Opcode.GOTO)            # jump to it
+    else:
+        codegen_label_address(label, ctx)
+        ctx.code.append(Opcode.GOTO)            # jump to it
+
+def codegen_label_address(label, ctx):
+        ctx.code.append(Opcode.LITERAL)         # push a location on the stack
+        ctx.label_fixups.append((label,len(ctx.code)))
+        ctx.code.append(99)                     # placeholder
+
 def codegen_print(op, ctx):
     if type(op) != PPrint:
         raise TranslatorError("expected a print statement", op)
@@ -75,7 +100,6 @@ def codegen_print(op, ctx):
         elif type(printable) == PExpr:
             codegen_expr(printable, ctx)
             ctx.code.append(Opcode.PRINTNUMLIT)
-            pass
 
 def codegen_let(op, ctx):
     name = op.id
@@ -177,6 +201,9 @@ def disassemble(code):
         elif code[i] == Opcode.GOTO:
             print addr(i) + " GOTO"
 
+        elif code[i] == Opcode.JUMPIF0:
+            print addr(i) + " JUMPIF0"
+
         elif code[i] == Opcode.LITERAL:
             print addr(i) + " LITERAL " + str(code[i+1])
             i += 1
@@ -214,6 +241,9 @@ def disassemble(code):
 
         elif code[i] == Opcode.DIVIDE:
             print addr(i) + " DIVIDE"
+
+        elif code[i] == Opcode.EQUAL:
+            print addr(i) + " EQUAL"
 
         elif code[i] == Opcode.HALT:
             print addr(i) + " HALT"

@@ -28,6 +28,7 @@ class Opcode(object):
 
     # flow control
     GOTO        = 10
+    JUMPIF0     = 11    # [a, addr] => [], jumps to addr if a==0
 
     # working with data
     LITERAL     = 20    # [] => [@(IP)++]
@@ -42,6 +43,9 @@ class Opcode(object):
     SUBTRACT    = 41
     MULTIPLY    = 42
     DIVIDE      = 43
+
+    # compare
+    EQUAL       = 50    # [a, b] => [1] if a==b, [0] otherwise
 
     # make HALT really obvious
     HALT        = 255
@@ -104,6 +108,14 @@ class BasicVM(object):
             op2 = self.STACK.pop()
             self.STACK.append(op1 + op2)
 
+        elif op == Opcode.EQUAL:
+            op1 = self.STACK.pop()
+            op2 = self.STACK.pop()
+            if op1 == op2:
+                self.STACK.append(1)
+            else:
+                self.STACK.append(0)
+
         elif op == Opcode.STORENUM:
             self.NUMVARS[self.NAME_REG] = self.STACK.pop()
 
@@ -121,6 +133,12 @@ class BasicVM(object):
 
         elif op == Opcode.GOTO:
             self.IP = self.STACK.pop() - 1  # the 1 gets added back below
+
+        elif op == Opcode.JUMPIF0:
+            addr = self.STACK.pop()
+            test = self.STACK.pop()
+            if test == 0:
+                self.IP = addr - 1  # the 1 gets added back below
 
         elif op == Opcode.HALT:
             self.halted = True

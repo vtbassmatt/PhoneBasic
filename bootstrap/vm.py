@@ -101,8 +101,15 @@ class BasicVM(object):
             index = self.STACK.pop()
             print self.string_table[index],
 
+        elif op == Opcode.PRINTNUMLIT:
+            val = self.STACK.pop()
+            print val,
+
         elif op == Opcode.HALT:
             self.halted = True
+
+        else:
+            raise VmError("unexpected opcode", op)
 
         self.IP += 1
 

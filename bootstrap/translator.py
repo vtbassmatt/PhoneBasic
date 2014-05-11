@@ -63,7 +63,8 @@ def codegen_print(op, ctx):
             codegen_str(printable, ctx)
             ctx.code.append(Opcode.PRINTSTRLIT)
         elif type(printable) == PExpr:
-            # TODO: handle expressions
+            codegen_expr(printable, ctx)
+            ctx.code.append(Opcode.PRINTNUMLIT)
             pass
 
 def codegen_let(op, ctx):

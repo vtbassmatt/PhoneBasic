@@ -38,6 +38,8 @@ def tokenize(s):
             yield Token(typ, "\n", line, mo.start()-line_start)
             line_start = pos + 1
             line += 1
+        elif typ == 'COMMENT':
+            pass
         elif typ != 'SKIP':
             val = mo.group(typ)
             if typ == 'ID' and val in keywords:

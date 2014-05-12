@@ -108,7 +108,7 @@ class BasicVM(object):
                 val = self.NUMVARS[name]
                 self.STACK.append(val)
             else:
-                raise VmError("variable is not defined", name)
+                raise VmError("RETRVNUM: variable is not defined", name)
 
         elif op == Opcode.ADD:
             op1 = self.STACK.pop()

@@ -98,7 +98,7 @@ def codegen_label(label, ctx):
 
 def codegen_goto(label, ctx):
     codegen_label_address(label, ctx)       # we'll figure out the address later
-    ctx.code.append(Opcode.GOTO)            # jump to it
+    ctx.code.append(Opcode.JUMP)            # jump to it
 
 def codegen_label_address(label, ctx):
     ctx.code.append(Opcode.LITERAL)         # push a location on the stack
@@ -212,8 +212,8 @@ def disassemble(code, metadata_bytes=4):
         elif code[i] == Opcode.PRINTSTRLIT:
             print addr(i) + " PRINTSTRLIT"
 
-        elif code[i] == Opcode.GOTO:
-            print addr(i) + " GOTO"
+        elif code[i] == Opcode.JUMP:
+            print addr(i) + " JUMP"
 
         elif code[i] == Opcode.JUMPIF0:
             print addr(i) + " JUMPIF0"

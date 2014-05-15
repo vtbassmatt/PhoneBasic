@@ -39,7 +39,7 @@ class Opcode(object):
     PRINTSTRLIT = 4     # [a] => [], strtab[a] sent to output
 
     # flow control
-    GOTO        = 10    # [addr] => [], jumps to addr
+    JUMP        = 10    # [addr] => [], jumps to addr
     JUMPIF0     = 11    # [a, addr] => [], jumps to addr if a==0
 
     # working with data
@@ -178,7 +178,7 @@ class BasicVM(object):
             val = self.STACK.pop()
             print val.value,
 
-        elif op == Opcode.GOTO:
+        elif op == Opcode.JUMP:
             addr = self.STACK.pop()
             self.IP = addr.value - 1  # the 1 gets added back below
 

@@ -114,7 +114,7 @@ def codegen_print(op, ctx):
             ctx.code.append(Opcode.PRINTSTRLIT)
         elif type(printable) == PExpr:
             codegen_expr(printable, ctx)
-            ctx.code.append(Opcode.PRINTNUMLIT)
+            ctx.code.append(Opcode.PRINT)
 
 def codegen_let(op, ctx):
     name = op.id
@@ -184,7 +184,7 @@ def codegen_read_var(op, ctx):
     if type(op) != PVar:
         raise TranslatorError("expected a variable", op)
     codegen_name(op.id, ctx)
-    ctx.code.append(Opcode.RETRVNUM)
+    ctx.code.append(Opcode.RETRV)
 
 
 # quick and dirty disassembler
@@ -201,14 +201,11 @@ def disassemble(code):
         elif code[i] == Opcode.CLEAR:
             print addr(i) + " CLEAR"
 
-        elif code[i] == Opcode.PRINTNUM:
-            print addr(i) + " PRINTNUM"
+        elif code[i] == Opcode.PRINT:
+            print addr(i) + " PRINT"
 
         elif code[i] == Opcode.PRINTNUMLIT:
             print addr(i) + " PRINTNUMLIT"
-
-        elif code[i] == Opcode.PRINTSTR:
-            print addr(i) + " PRINTSTR"
 
         elif code[i] == Opcode.PRINTSTRLIT:
             print addr(i) + " PRINTSTRLIT"
@@ -237,7 +234,7 @@ def disassemble(code):
             print addr(i) + " STORENUM"
 
         elif code[i] == Opcode.RETRVNUM:
-            print addr(i) + " RETRVNUM"
+            print addr(i) + " RETRV"
 
         elif code[i] == Opcode.DELETENUM:
             print addr(i) + " DELETENUM"

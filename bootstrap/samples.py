@@ -10,6 +10,7 @@ PRINT q1
 PRINT "Hello world", 27
 PRINT "a =", a
 IF a < 1 THEN PRINT "a is less than 1"
+IF a > 1 THEN PRINT "a is greater than 1"
 //INPUT a, b
 bottom:
 END

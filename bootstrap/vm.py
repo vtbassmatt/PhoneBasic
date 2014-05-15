@@ -34,7 +34,7 @@ class Opcode(object):
 
     # screen stuff
     CLEAR       = 1     # clear the screen
-    PRINTHEAP   = 2     # heap[@(namereg)] sent to output
+    PRINT       = 2     # [a] => [], string or numeric sent to output
     PRINTNUMLIT = 3     # [a] => [], number 'a' sent to output
     PRINTSTRLIT = 4     # [a] => [], strtab[a] sent to output
 
@@ -46,9 +46,9 @@ class Opcode(object):
     LITERAL     = 20    # [] => [@(IP)++]
     NAME        = 21    # a = @(IP+1), next 'a' bytes read into name register, IP=IP+a+1
     STORENUM    = 22    # [a] => [], heap[@(namereg)] = a
-    RETRVNUM    = 23    # [] => [heap[@(namereg)]]
-    DELETENUM   = 24    # heap[@(namereg)] unset
-    STORESTR    = 25    # [a] => [], heap[@(namereg)] = strtab[a]
+    DELETENUM   = 23    # heap[@(namereg)] unset
+    STORESTR    = 24    # [a] => [], heap[@(namereg)] = strtab[a]
+    RETRV       = 25    # [] => [heap[@(namereg)]]
 
     # math
     ADD         = 40    # [b, a] => [a+b]
@@ -101,7 +101,8 @@ class BasicVM(object):
                 real_clear()
 
         elif op == Opcode.LITERAL:
-            self.STACK.append(self.code[self.IP + 1])
+            var = Var(typ=Var.NUMERIC, value=self.code[self.IP + 1])
+            self.STACK.append(var)
             self.IP += 1
 
         elif op == Opcode.NAME:
@@ -111,72 +112,75 @@ class BasicVM(object):
             self.NAME_REG = name
             self.IP += 1 + name_len
 
-        elif op == Opcode.RETRVNUM:
+        elif op == Opcode.RETRV:
             name = self.NAME_REG
             if name in self.VARS:
                 val = self.VARS[name]
-                if val.typ == Var.NUMERIC:
-                    self.STACK.append(val)
-                else:
-                    raise VmError("RETRVNUM: variable is not numeric", val)
+                self.STACK.append(val)
             else:
                 raise VmError("RETRVNUM: variable is not defined", name)
 
         elif op == Opcode.ADD:
             op1 = self.STACK.pop()
             op2 = self.STACK.pop()
-            self.STACK.append(op1 + op2)
+            # TODO: ensure this only works on numerics
+            self.STACK.append(Var(typ=Var.NUMERIC, value=(op1.value + op2.value)))
 
         elif op == Opcode.EQUAL:
             op1 = self.STACK.pop()
             op2 = self.STACK.pop()
-            if op1 == op2:
-                self.STACK.append(1)
+            if op1.typ == op2.typ and op1.value == op2.value:
+                self.STACK.append(Var(typ=Var.NUMERIC, value=1))
             else:
-                self.STACK.append(0)
+                self.STACK.append(Var(typ=Var.NUMERIC, value=0))
 
         elif op == Opcode.LT:
             op1 = self.STACK.pop()
             op2 = self.STACK.pop()
             if op1 < op2:
-                self.STACK.append(1)
+                self.STACK.append(Var(typ=Var.NUMERIC, value=1))
             else:
-                self.STACK.append(0)
+                self.STACK.append(Var(typ=Var.NUMERIC, value=0))
 
         elif op == Opcode.LTE:
             op1 = self.STACK.pop()
             op2 = self.STACK.pop()
             if op1 <= op2:
-                self.STACK.append(1)
+                self.STACK.append(Var(typ=Var.NUMERIC, value=1))
             else:
-                self.STACK.append(0)
+                self.STACK.append(Var(typ=Var.NUMERIC, value=0))
 
         elif op == Opcode.STORENUM:
             num = self.STACK.pop()
-            var = Var(Var.NUMERIC, num)
-            self.VARS[self.NAME_REG] = var
+            # TODO: ensure this only works on numerics
+            self.VARS[self.NAME_REG] = num
 
         elif op == Opcode.STORESTR:
             index = self.STACK.pop()
-            string = self.string_table[index]
+            string = self.string_table[index.value]
             self.VARS[self.NAME_REG] = Var(Var.STRING, string)
 
         elif op == Opcode.PRINTSTRLIT:
             index = self.STACK.pop()
-            print self.string_table[index],
+            print self.string_table[index.value],
 
         elif op == Opcode.PRINTNUMLIT:
             val = self.STACK.pop()
-            print val,
+            print val.value,
+
+        elif op == Opcode.PRINT:
+            val = self.STACK.pop()
+            print val.value,
 
         elif op == Opcode.GOTO:
-            self.IP = self.STACK.pop() - 1  # the 1 gets added back below
+            addr = self.STACK.pop()
+            self.IP = addr.value - 1  # the 1 gets added back below
 
         elif op == Opcode.JUMPIF0:
             addr = self.STACK.pop()
             test = self.STACK.pop()
-            if test == 0:
-                self.IP = addr - 1  # the 1 gets added back below
+            if test.value == 0:
+                self.IP = addr.value - 1  # the 1 gets added back below
 
         elif op == Opcode.HALT:
             self.halted = True

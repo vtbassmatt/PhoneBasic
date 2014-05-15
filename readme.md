@@ -39,8 +39,8 @@ FirstLoop:
  PRINT B, " - 1 IS ", B - A
 IF B = 0 THEN GOTO FirstLoop
 
-SecondLoop:
 LET I BE 1
+SecondLoop:
   PRINT I
   LET I BE I + 1
 IF I < 10 THEN GOTO SecondLoop

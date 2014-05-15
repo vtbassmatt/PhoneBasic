@@ -1,4 +1,5 @@
 import pprint
+import sys
 import collections
 from lexer import tokenize
 from parser import parse, PClear, PLabel, PLet, PPrint, PIf, PGoto, PInput, PEnd
@@ -235,7 +236,7 @@ def disassemble(code, metadata_bytes=4):
         elif code[i] == Opcode.STORENUM:
             print addr(i) + " STORENUM"
 
-        elif code[i] == Opcode.RETRVNUM:
+        elif code[i] == Opcode.RETRV:
             print addr(i) + " RETRV"
 
         elif code[i] == Opcode.DELETENUM:
@@ -284,9 +285,14 @@ def disassemble(code, metadata_bytes=4):
 
 
 if __name__ == "__main__":
-    from samples import sample_prog
+    if len(sys.argv) > 1:
+        print "opening file", sys.argv[1]
+        with open(sys.argv[1], 'r') as f:
+            prog = f.read()
+    else:
+        from samples import sample_prog as prog
 
-    ast = parse(tokenize(sample_prog))
+    ast = parse(tokenize(prog))
     print "AST:"
     pprint.pprint(ast)
 

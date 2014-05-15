@@ -124,7 +124,7 @@ class BasicVM(object):
                 val = self.VARS[name]
                 self.STACK.append(val)
             else:
-                raise VmError("RETRVNUM: variable is not defined", name)
+                raise VmError("RETRV: variable is not defined", name)
 
         elif op == Opcode.ADD:
             op1 = self.STACK.pop()
@@ -143,7 +143,7 @@ class BasicVM(object):
         elif op == Opcode.LT:
             op1 = self.STACK.pop()
             op2 = self.STACK.pop()
-            if op1 < op2:
+            if op1.value < op2.value:
                 self.STACK.append(Var(typ=Var.NUMERIC, value=1))
             else:
                 self.STACK.append(Var(typ=Var.NUMERIC, value=0))
@@ -151,7 +151,7 @@ class BasicVM(object):
         elif op == Opcode.LTE:
             op1 = self.STACK.pop()
             op2 = self.STACK.pop()
-            if op1 <= op2:
+            if op1.value <= op2.value:
                 self.STACK.append(Var(typ=Var.NUMERIC, value=1))
             else:
                 self.STACK.append(Var(typ=Var.NUMERIC, value=0))

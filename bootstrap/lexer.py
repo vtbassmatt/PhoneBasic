@@ -3,6 +3,7 @@
 
 import collections
 import re
+import sys
 
 class LexerError(RuntimeError):
     pass
@@ -55,7 +56,13 @@ def tokenize(s):
 
 
 if __name__ == "__main__":
-    statements = '''
+    if len(sys.argv) > 1:
+        print "opening file", sys.argv[1]
+        with open(sys.argv[1], 'r') as f:
+            statements = f.read()
+    else:
+        print "using baked-in file"
+        statements = '''
 // We use the 'LET var BE' syntax because = is buried on phone keypads
 LET A BE 1
 LET B BE 0

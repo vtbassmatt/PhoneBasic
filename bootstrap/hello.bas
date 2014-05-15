@@ -1,24 +1,24 @@
 // We use the 'LET var BE' syntax because = is buried on phone keypads
-LET A BE 1
-LET B BE 0
-LET GREETING BE "Hello world!"
-PRINT GREETING
+//LET A BE 1
+//LET B BE 0
+//LET GREETING BE "Hello world!"
+//PRINT GREETING
 
 //FirstLoop:
 // PRINT ">"
- INPUT B
+// INPUT B
 // PRINT B, " - 1 IS ", B - A
 //IF B = 0 THEN GOTO FirstLoop
 
-SecondLoop:
 LET I BE 1
+SecondLoop:
   PRINT I
   LET I BE I + 1
 IF I < 10 THEN GOTO SecondLoop
 
 // We could have chosen 'IF B IS 0' to avoid the =
 // but that looked ugly
-IF B = 0 THEN PRINT "The world makes sense"
+//IF B = 0 THEN PRINT "The world makes sense"
 
 //COMPUTE C AS Plus2 4
 //// this will print '6'

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 from lexer import tokenize
 from parser import parse
-from translator import translate
-from vm import BasicVM
+from translator import translate, disassemble
+from vm import BasicVM, VmError
 
 import argparse
 
@@ -20,8 +20,10 @@ try:
     #vm.SetDebugger(True)
     try:
         vm.Run()
-    except Exception, e:
-        print e.args
+    except VmError, e:
+        print "Execution error", e.args
+        loc = e.args[1]["loc"]
+        disassemble(code[loc-3:loc+3], False)
 
 except IOError, e:
     print "couldn't find or open file", e.filename

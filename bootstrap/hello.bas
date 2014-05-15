@@ -6,7 +6,7 @@ PRINT GREETING
 
 //FirstLoop:
 // PRINT ">"
-// INPUT B
+ INPUT B
 // PRINT B, " - 1 IS ", B - A
 //IF B = 0 THEN GOTO FirstLoop
 

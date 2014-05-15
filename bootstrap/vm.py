@@ -191,6 +191,9 @@ class BasicVM(object):
         elif op == Opcode.HALT or op == Opcode.EOM_HALT:
             self.halted = True
 
+        elif op == Opcode.NOOP:
+            pass
+
         else:
             raise VmError("unexpected opcode", {"op":op, "loc":self.IP})
 

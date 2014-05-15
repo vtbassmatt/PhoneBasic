@@ -9,6 +9,17 @@ class VmError(RuntimeError):
     pass
 
 
+class Var(object):
+    def __init__(self, typ, value):
+        self.typ = typ
+        self.value = value
+
+    NUMERIC = "numeric"
+    STRING = "string"
+
+    def __repr__(self):
+        return "<Var:{0}={1}>".format(self.typ, self.value)
+
 class Opcode(object):
     """Opcodes for this virtual machine.
 
@@ -23,10 +34,9 @@ class Opcode(object):
 
     # screen stuff
     CLEAR       = 1     # clear the screen
-    PRINTNUM    = 2     # nummem[@(namereg)] sent to output
+    PRINTHEAP   = 2     # heap[@(namereg)] sent to output
     PRINTNUMLIT = 3     # [a] => [], number 'a' sent to output
-    PRINTSTR    = 4     # strmem[@(namereg)] sent to output
-    PRINTSTRLIT = 5     # [a] => [], strtab[a] sent to output
+    PRINTSTRLIT = 4     # [a] => [], strtab[a] sent to output
 
     # flow control
     GOTO        = 10    # [addr] => [], jumps to addr
@@ -35,10 +45,10 @@ class Opcode(object):
     # working with data
     LITERAL     = 20    # [] => [@(IP)++]
     NAME        = 21    # a = @(IP+1), next 'a' bytes read into name register, IP=IP+a+1
-    STORENUM    = 22    # [a] => [], nummem[@(namereg)] = a
-    RETRVNUM    = 23    # [] => [nummem[@(namereg)]]
-    DELETENUM   = 24    # nummem[@(namereg)] unset
-    STORESTR    = 25    # [a] => [], strmem[@(namereg)] = strtab[a]
+    STORENUM    = 22    # [a] => [], heap[@(namereg)] = a
+    RETRVNUM    = 23    # [] => [heap[@(namereg)]]
+    DELETENUM   = 24    # heap[@(namereg)] unset
+    STORESTR    = 25    # [a] => [], heap[@(namereg)] = strtab[a]
 
     # math
     ADD         = 40    # [b, a] => [a+b]
@@ -76,8 +86,7 @@ class BasicVM(object):
         self.IP = 4     # skip metadata
         self.STACK = []
         self.NAME_REG = None
-        self.NUMVARS = {}
-        self.STRVARS = {}
+        self.VARS = {}
         self.halted = False
 
     def Step(self):
@@ -104,9 +113,12 @@ class BasicVM(object):
 
         elif op == Opcode.RETRVNUM:
             name = self.NAME_REG
-            if name in self.NUMVARS:
-                val = self.NUMVARS[name]
-                self.STACK.append(val)
+            if name in self.VARS:
+                val = self.VARS[name]
+                if val.typ == Var.NUMERIC:
+                    self.STACK.append(val)
+                else:
+                    raise VmError("RETRVNUM: variable is not numeric", val)
             else:
                 raise VmError("RETRVNUM: variable is not defined", name)
 
@@ -140,11 +152,14 @@ class BasicVM(object):
                 self.STACK.append(0)
 
         elif op == Opcode.STORENUM:
-            self.NUMVARS[self.NAME_REG] = self.STACK.pop()
+            num = self.STACK.pop()
+            var = Var(Var.NUMERIC, num)
+            self.VARS[self.NAME_REG] = var
 
         elif op == Opcode.STORESTR:
             index = self.STACK.pop()
-            self.STRVARS[self.NAME_REG] = self.string_table[index]
+            string = self.string_table[index]
+            self.VARS[self.NAME_REG] = Var(Var.STRING, string)
 
         elif op == Opcode.PRINTSTRLIT:
             index = self.STACK.pop()
@@ -176,8 +191,7 @@ class BasicVM(object):
             "IP": self.IP,
             "STACK": self.STACK,
             "NAME_REG": self.NAME_REG,
-            "NUMs": self.NUMVARS,
-            "STRs": self.STRVARS,
+            "VARs": self.VARS,
             "HALTed": self.halted,
         })
 

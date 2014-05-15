@@ -37,13 +37,13 @@ FirstLoop:
  PRINT ">"
  INPUT B
  PRINT B, " - 1 IS ", B - A
-IF B IS 0 GOTO FirstLoop
+IF B = 0 THEN GOTO FirstLoop
 
 SecondLoop:
 LET I BE 1
   PRINT I
   LET I BE I + 1
-IF I < 10 GOTO SecondLoop
+IF I < 10 THEN GOTO SecondLoop
 
 // We could have chosen 'IF B IS 0' to avoid the =
 // but that looked ugly

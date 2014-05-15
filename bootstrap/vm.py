@@ -65,6 +65,7 @@ class Opcode(object):
     GTE         = 52    # [b, a] => [1] if a>=b, [0] otherwise
 
     # make HALT really obvious
+    EOM_HALT    = 254
     HALT        = 255
 
 
@@ -90,7 +91,12 @@ class BasicVM(object):
         self.halted = False
 
     def Step(self):
-        op = self.code[self.IP]
+        try:
+            op = self.code[self.IP]
+        except IndexError:
+            # ran off the end of memory
+            op = Opcode.EOM_HALT
+
         if self.debugger:
             print "opcode =",op
 
@@ -182,11 +188,11 @@ class BasicVM(object):
             if test.value == 0:
                 self.IP = addr.value - 1  # the 1 gets added back below
 
-        elif op == Opcode.HALT:
+        elif op == Opcode.HALT or op == Opcode.EOM_HALT:
             self.halted = True
 
         else:
-            raise VmError("unexpected opcode", op)
+            raise VmError("unexpected opcode", {"op":op, "loc":self.IP})
 
         self.IP += 1
 

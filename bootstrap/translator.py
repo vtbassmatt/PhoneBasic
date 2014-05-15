@@ -188,15 +188,13 @@ def codegen_read_var(op, ctx):
 
 
 # quick and dirty disassembler
-def disassemble(code, first_is_metadata=True):
+def disassemble(code, metadata_bytes=4):
     def addr(a):
         return "{:#04x}".format(a)
 
-    if first_is_metadata:
-        i = 4
-        print "Metadata: " + str([chr(a) for a in code[0:4]])
-    else:
-        i = 0
+    i = metadata_bytes
+    if i > 0:
+        print "Metadata: " + str([chr(a) for a in code[0:i]])
 
     while i < len(code):
         if code[i] == Opcode.NOOP:

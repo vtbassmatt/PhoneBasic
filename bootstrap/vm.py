@@ -1,5 +1,6 @@
 import os
 import pprint
+import struct
 
 def real_clear():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -43,7 +44,8 @@ class Opcode(object):
     JUMPIF0     = 11    # [a, addr] => [], jumps to addr if a==0
 
     # working with data
-    LITERAL1    = 20    # [] => [@(IP)++]
+    LITERAL1    = 20    # [] => [a] where a is the next byte
+    LITERAL2    = 21    # [] => [ab] where ab is the next 2 bytes
 
     # variables
     NAME        = 30    # a = @(IP+1), next 'a' bytes read into name register, IP=IP+a+1
@@ -112,6 +114,13 @@ class BasicVM(object):
             var = Var(typ=Var.NUMERIC, value=self.code[self.IP + 1])
             self.STACK.append(var)
             self.IP += 1
+
+        elif op == Opcode.LITERAL2:
+            raw = chr(self.code[self.IP+1]) + chr(self.code[self.IP+2])
+            val = struct.unpack(">h", raw)
+            var = Var(typ=Var.NUMERIC, value=val[0])
+            self.STACK.append(var)
+            self.IP += 2
 
         elif op == Opcode.NAME:
             name_len = self.code[self.IP + 1]

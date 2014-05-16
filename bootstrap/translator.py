@@ -1,6 +1,7 @@
 import pprint
 import sys
 import collections
+import struct
 from lexer import tokenize
 from parser import parse, PClear, PLabel, PLet, PPrint, PIf, PGoto, PInput, PEnd
 from parser import PExpr, PVar, PNumber, PArith, PString
@@ -36,7 +37,9 @@ def translate(ast):
     while len(ctx.label_fixups) > 0:
         (label,addr) = ctx.label_fixups.pop()
         label_addr = ctx.label_table[label]
-        ctx.code[addr] = label_addr
+        val = struct.pack(">h", label_addr)
+        ctx.code[addr]   = ord(val[0])
+        ctx.code[addr+1] = ord(val[1])
 
     return (ctx.code, ctx.string_table)
 
@@ -102,9 +105,9 @@ def codegen_goto(label, ctx):
     ctx.code.append(Opcode.JUMP)            # jump to it
 
 def codegen_label_address(label, ctx):
-    ctx.code.append(Opcode.LITERAL1)        # push a location on the stack
-    ctx.label_fixups.append((label,len(ctx.code)))
-    ctx.code.append(99)                     # placeholder
+    # the +1 accounts for the LITERAL2 op
+    ctx.label_fixups.append((label,len(ctx.code)+1))
+    codegen_literal2(0, ctx)    # placeholder of 0, will be overwritten later
 
 def codegen_print(op, ctx):
     if type(op) != PPrint:
@@ -137,18 +140,25 @@ def codegen_name(name, ctx):
     for letter in name:
         ctx.code.append(ord(letter))
 
+def codegen_literal2(value, ctx):
+    ctx.code.append(Opcode.LITERAL2)
+    val = struct.pack(">h", value)
+    ctx.code.append(ord(val[0]))
+    ctx.code.append(ord(val[1]))
+
 def codegen_expr(expr_token, ctx):
     # expressions expected in reverse polish notation
     if type(expr_token) != PExpr:
         raise TranslatorError("expected an expression to parse", expr_token)
     for op in expr_token.expr:
         if type(op) == PNumber:
-            # TODO: deal with numbers > 255 and actually deal with floats
-            ctx.code.append(Opcode.LITERAL1)
+            # TODO: deal with numbers > 65K and actually deal with floats
             if "." in op.value:
-                ctx.code.append(float(op.value))
+                raise NotImplementedError("float literals not implemented", op)
+                #ctx.code.append(Opcode.LITERAL1)
+                #ctx.code.append(float(op.value))
             else:
-                ctx.code.append(int(op.value))
+                codegen_literal2(int(op.value), ctx)
 
         elif type(op) == PArith:
             if op.op == "+":
@@ -222,6 +232,12 @@ def disassemble(code, metadata_bytes=4):
         elif code[i] == Opcode.LITERAL1:
             print addr(i) + " LITERAL1", code[i+1], "/", hex(code[i+1])
             i += 1
+            print addr(i) + "         ^^^"
+
+        elif code[i] == Opcode.LITERAL2:
+            print addr(i) + " LITERAL2", code[i+1], code[i+2], \
+                "/", hex(code[i+1]), hex(code[i+2])
+            i += 2
             print addr(i) + "         ^^^"
 
         elif code[i] == Opcode.NAME:

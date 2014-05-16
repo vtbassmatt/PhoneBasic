@@ -17,6 +17,7 @@ try:
 
     vm = BasicVM()
     vm.Load(code, strings)
+    # TODO: make debugger a command-line setting
     #vm.SetDebugger(True)
     try:
         vm.Run()

@@ -9,6 +9,7 @@ import argparse
 parser = argparse.ArgumentParser(description='Run the PhoneBasic compiler.')
 parser.add_argument('source', type=file,
                    help='input file')
+parser.add_argument('--debug', help="enable debugging", action="store_true")
 
 try:
     args = parser.parse_args()
@@ -17,8 +18,8 @@ try:
 
     vm = BasicVM()
     vm.Load(code, strings)
-    # TODO: make debugger a command-line setting
-    #vm.SetDebugger(True)
+    if args.debug:
+        vm.SetDebugger(True)
     try:
         vm.Run()
     except VmError, e:

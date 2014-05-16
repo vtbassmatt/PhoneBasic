@@ -235,8 +235,10 @@ def disassemble(code, metadata_bytes=4):
             print addr(i) + "         ^^^"
 
         elif code[i] == Opcode.LITERAL2:
-            print addr(i) + " LITERAL2", code[i+1], code[i+2], \
-                "/", hex(code[i+1]), hex(code[i+2])
+            raw = chr(code[i+1]) + chr(code[i+2])
+            tup = struct.unpack(">h", raw)
+            val = tup[0]
+            print addr(i) + " LITERAL2", val, "/", hex(val)
             i += 2
             print addr(i) + "         ^^^"
 

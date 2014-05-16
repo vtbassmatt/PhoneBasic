@@ -102,7 +102,7 @@ def codegen_goto(label, ctx):
     ctx.code.append(Opcode.JUMP)            # jump to it
 
 def codegen_label_address(label, ctx):
-    ctx.code.append(Opcode.LITERAL)         # push a location on the stack
+    ctx.code.append(Opcode.LITERAL1)        # push a location on the stack
     ctx.label_fixups.append((label,len(ctx.code)))
     ctx.code.append(99)                     # placeholder
 
@@ -144,7 +144,7 @@ def codegen_expr(expr_token, ctx):
     for op in expr_token.expr:
         if type(op) == PNumber:
             # TODO: deal with numbers > 255 and actually deal with floats
-            ctx.code.append(Opcode.LITERAL)
+            ctx.code.append(Opcode.LITERAL1)
             if "." in op.value:
                 ctx.code.append(float(op.value))
             else:
@@ -174,7 +174,7 @@ def codegen_str(str_token, ctx):
         raise TranslatorError("expected a string literal to parse", str_token)
 
     # tries not to include dupe strings
-    ctx.code.append(Opcode.LITERAL)
+    ctx.code.append(Opcode.LITERAL1)
     if str_token.value in ctx.string_table:
         ctx.code.append(ctx.string_table.index(str_token.value))
     else:
@@ -219,8 +219,8 @@ def disassemble(code, metadata_bytes=4):
         elif code[i] == Opcode.JUMPIF0:
             print addr(i) + " JUMPIF0"
 
-        elif code[i] == Opcode.LITERAL:
-            print addr(i) + " LITERAL", code[i+1], "/", hex(code[i+1])
+        elif code[i] == Opcode.LITERAL1:
+            print addr(i) + " LITERAL1", code[i+1], "/", hex(code[i+1])
             i += 1
             print addr(i) + "         ^^^"
 

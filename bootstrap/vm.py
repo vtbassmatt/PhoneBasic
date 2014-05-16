@@ -43,12 +43,14 @@ class Opcode(object):
     JUMPIF0     = 11    # [a, addr] => [], jumps to addr if a==0
 
     # working with data
-    LITERAL     = 20    # [] => [@(IP)++]
-    NAME        = 21    # a = @(IP+1), next 'a' bytes read into name register, IP=IP+a+1
-    STORENUM    = 22    # [a] => [], heap[@(namereg)] = a
-    DELETENUM   = 23    # heap[@(namereg)] unset
-    STORESTR    = 24    # [a] => [], heap[@(namereg)] = strtab[a]
-    RETRV       = 25    # [] => [heap[@(namereg)]]
+    LITERAL1    = 20    # [] => [@(IP)++]
+
+    # variables
+    NAME        = 30    # a = @(IP+1), next 'a' bytes read into name register, IP=IP+a+1
+    STORENUM    = 31    # [a] => [], heap[@(namereg)] = a
+    DELETENUM   = 32    # heap[@(namereg)] unset
+    STORESTR    = 33    # [a] => [], heap[@(namereg)] = strtab[a]
+    RETRV       = 34    # [] => [heap[@(namereg)]]
 
     # math
     ADD         = 40    # [b, a] => [a+b]
@@ -106,7 +108,7 @@ class BasicVM(object):
             else:
                 real_clear()
 
-        elif op == Opcode.LITERAL:
+        elif op == Opcode.LITERAL1:
             var = Var(typ=Var.NUMERIC, value=self.code[self.IP + 1])
             self.STACK.append(var)
             self.IP += 1

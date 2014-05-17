@@ -221,8 +221,10 @@ class BasicVM(object):
 
         elif op == Opcode.STORENUM:
             num = self.STACK.pop()
-            # TODO: ensure this only works on numerics
-            self.VARS[self.NAME_REG] = num
+            if num.typ == Var.NUMERIC:
+                self.VARS[self.NAME_REG] = num
+            else:
+                raise VmError("expected a number", ErrCtx(e=num, loc=self.IP))
 
         elif op == Opcode.STORESTR:
             index = self.STACK.pop()

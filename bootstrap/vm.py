@@ -142,12 +142,39 @@ class BasicVM(object):
                 raise VmError("RETRV: variable is not defined", ErrCtx(e=name, loc=self.IP))
 
         elif op == Opcode.ADD:
-            op1 = self.STACK.pop()
             op2 = self.STACK.pop()
+            op1 = self.STACK.pop()
             if op1.typ == Var.NUMERIC and op2.typ == Var.NUMERIC:
                 self.STACK.append(Var(typ=Var.NUMERIC, value=(op1.value + op2.value)))
             else:
                 raise VmError("ADD: expected both operands to be numeric",
+                    ErrCtx(e=(op1,op2), loc=self.IP))
+
+        elif op == Opcode.SUBTRACT:
+            op2 = self.STACK.pop()
+            op1 = self.STACK.pop()
+            if op1.typ == Var.NUMERIC and op2.typ == Var.NUMERIC:
+                self.STACK.append(Var(typ=Var.NUMERIC, value=(op1.value - op2.value)))
+            else:
+                raise VmError("SUBTRACT: expected both operands to be numeric",
+                    ErrCtx(e=(op1,op2), loc=self.IP))
+
+        elif op == Opcode.MULTIPLY:
+            op2 = self.STACK.pop()
+            op1 = self.STACK.pop()
+            if op1.typ == Var.NUMERIC and op2.typ == Var.NUMERIC:
+                self.STACK.append(Var(typ=Var.NUMERIC, value=(op1.value * op2.value)))
+            else:
+                raise VmError("MULTIPLY: expected both operands to be numeric",
+                    ErrCtx(e=(op1,op2), loc=self.IP))
+
+        elif op == Opcode.DIVIDE:
+            op2 = self.STACK.pop()
+            op1 = self.STACK.pop()
+            if op1.typ == Var.NUMERIC and op2.typ == Var.NUMERIC:
+                self.STACK.append(Var(typ=Var.NUMERIC, value=(op1.value / op2.value)))
+            else:
+                raise VmError("DIVIDE: expected both operands to be numeric",
                     ErrCtx(e=(op1,op2), loc=self.IP))
 
         elif op == Opcode.EQUAL:

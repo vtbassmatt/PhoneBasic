@@ -12,12 +12,12 @@
 
 LET a BE 3
 LET b BE 2
-LET c BE "blob"
-LET d BE "4"
 
+PRINT "a,b", a, b
 PRINT "a+b", a+b
-PRINT "b+c", b+c
-PRINT "c+d", c+d
+PRINT "a-b", a-b
+PRINT "a*b", a*b
+PRINT "a/b", a/b
 
 //LET I BE 1
 //SecondLoop:

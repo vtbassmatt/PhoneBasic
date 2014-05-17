@@ -25,7 +25,7 @@ class TestParser(unittest.TestCase):
                             stmt=PPrint(rhs=[PString(value='Less than 2'),
                                              PString(value='\n')])),
             PGoto(id='top'),
-            PInput(rhs=['a', 'b']),
+            PInput(rhs=[PVar(id='a'), PVar(id='b')]),
             PEnd()
         ]
 

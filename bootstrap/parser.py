@@ -139,7 +139,7 @@ class Parser(object):
         while True:
             self.next()
             if self.token.typ == "ID":
-                input_vars.append(self.token.value)
+                input_vars.append(PVar(self.token.value))
                 continue
             elif self.token.typ == "COMMA":
                 continue

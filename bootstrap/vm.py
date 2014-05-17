@@ -59,6 +59,7 @@ class Opcode(object):
     DELETENUM   = 32    # heap[@(namereg)] unset
     STORESTR    = 33    # [a] => [], heap[@(namereg)] = strtab[a]
     RETRV       = 34    # [] => [heap[@(namereg)]]
+    INPUT       = 35    # await input, store it in heap[@(namereg)]
 
     # math
     ADD         = 40    # [b, a] => [a+b]
@@ -152,6 +153,11 @@ class BasicVM(object):
                 self.STACK.append(val)
             else:
                 raise VmError("RETRV: variable is not defined", ErrCtx(e=name, loc=self.IP))
+
+        elif op == Opcode.INPUT:
+            name = self.NAME_REG
+            data = raw_input('> ')
+            self.VARS[name] = Var(typ=Var.STRING, value=data)
 
         elif op == Opcode.ADD:
             op2 = self.STACK.pop()

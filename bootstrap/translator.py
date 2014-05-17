@@ -60,6 +60,9 @@ def codegen_stmt(op, ctx):
     elif type(op) == PIf:
         codegen_if(op, ctx)
 
+    elif type(op) == PInput:
+        codegen_input(op, ctx)
+
     elif type(op) == PEnd:
         ctx.code.append(Opcode.HALT)
 
@@ -119,6 +122,16 @@ def codegen_print(op, ctx):
         elif type(printable) == PExpr:
             codegen_expr(printable, ctx)
             ctx.code.append(Opcode.PRINT)
+
+def codegen_input(op, ctx):
+    if type(op) != PInput:
+        raise TranslatorError("expected an input statement", op)
+    for input_var in op.rhs:
+        if type(input_var) == PVar:
+            codegen_name(input_var.id, ctx)
+            ctx.code.append(Opcode.INPUT)
+        else:
+            raise TranslatorError("expected an input variable", input_var)
 
 def codegen_let(op, ctx):
     name = op.id
@@ -271,6 +284,9 @@ def disassemble(code, metadata_bytes=4, base_addr=0):
 
         elif code[i] == Opcode.RETRV:
             print addr(i) + " RETRV"
+
+        elif code[i] == Opcode.INPUT:
+            print addr(i) + " INPUT"
 
         elif code[i] == Opcode.DELETENUM:
             print addr(i) + " DELETENUM"

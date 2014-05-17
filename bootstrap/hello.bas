@@ -10,6 +10,14 @@
 // PRINT B, " - 1 IS ", B - A
 //IF B = 0 THEN GOTO FirstLoop
 
+PRINT "What is your name?"
+INPUT name
+PRINT "Hello", name
+
+PRINT "Enter your birth year followed by your birth month"
+INPUT year, month
+PRINT "You were born in", month, year
+
 LET a BE 3
 LET b BE 2
 

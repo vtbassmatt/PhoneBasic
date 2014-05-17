@@ -67,7 +67,6 @@ class TestTokenize(unittest.TestCase):
 
     def test_comment(self):
         expect = [
-            Token("COMMENT", "//comment", 1, 0),
             Token("NEWLINE", "\n", 1, 9),
             Token("STRING", "not a comment", 2, 0),
         ]
@@ -91,7 +90,6 @@ class TestTokenize(unittest.TestCase):
     def test_long(self):
         expect = [
             Token(typ='NEWLINE', value='\n', line=1, column=0),
-            Token(typ='COMMENT', value="// We use the 'LET var BE' syntax because = is buried on phone keypads", line=2, column=0),
             Token(typ='NEWLINE', value='\n', line=2, column=70),
             Token(typ='LET', value='LET', line=3, column=0),
             Token(typ='ID', value='A', line=3, column=4),
@@ -166,9 +164,7 @@ class TestTokenize(unittest.TestCase):
             Token(typ='ID', value='SecondLoop', line=18, column=15),
             Token(typ='NEWLINE', value='\n', line=18, column=25),
             Token(typ='NEWLINE', value='\n', line=19, column=0),
-            Token(typ='COMMENT', value="// We could have chosen 'IF B IS 0' to avoid the =", line=20, column=0),
             Token(typ='NEWLINE', value='\n', line=20, column=50),
-            Token(typ='COMMENT', value='// but that looked ugly', line=21, column=0),
             Token(typ='NEWLINE', value='\n', line=21, column=23),
             Token(typ='IF', value='IF', line=22, column=0),
             Token(typ='ID', value='B', line=22, column=3),
@@ -185,7 +181,6 @@ class TestTokenize(unittest.TestCase):
             Token(typ='ID', value='Plus2', line=24, column=13),
             Token(typ='NUMBER', value='4', line=24, column=19),
             Token(typ='NEWLINE', value='\n', line=24, column=20),
-            Token(typ='COMMENT', value="// this will print '6'", line=25, column=0),
             Token(typ='NEWLINE', value='\n', line=25, column=22),
             Token(typ='PRINT', value='PRINT', line=26, column=0),
             Token(typ='ID', value='C', line=26, column=6),

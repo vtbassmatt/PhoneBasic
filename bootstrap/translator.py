@@ -70,7 +70,7 @@ def codegen_stmt(op, ctx):
         ctx.code.append(Opcode.NOOP)
 
 def codegen_if(op, ctx):
-    # TODO: think about whether AND, OR, and NOT are important
+    # TODO: bug #1 (add AND, OR, and NOT)
     if type(op) != PIf:
         raise TranslatorError("expected an if statement", op)
     codegen_expr(op.expr2, ctx)
@@ -176,7 +176,7 @@ def codegen_expr(expr_token, ctx):
             if "." in op.value:
                 codegen_float4(float(op.value), ctx)
             else:
-                # TODO: deal with numbers > 65K
+                # TODO: bug #5 (deal with numbers > 65K)
                 codegen_literal2(int(op.value), ctx)
 
         elif type(op) == PArith:

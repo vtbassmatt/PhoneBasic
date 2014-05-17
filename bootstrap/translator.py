@@ -199,9 +199,9 @@ def codegen_read_var(op, ctx):
 
 
 # quick and dirty disassembler
-def disassemble(code, metadata_bytes=4):
+def disassemble(code, metadata_bytes=4, base_addr=0):
     def addr(a):
-        return "{:#04x}".format(a)
+        return "{:#04x}".format(a+base_addr)
 
     i = metadata_bytes
     if i > 0:
@@ -230,26 +230,35 @@ def disassemble(code, metadata_bytes=4):
             print addr(i) + " JUMPIF0"
 
         elif code[i] == Opcode.LITERAL1:
-            print addr(i) + " LITERAL1", code[i+1], "/", hex(code[i+1])
-            i += 1
-            print addr(i) + "         ^^^"
+            try:
+                print addr(i) + " LITERAL1", code[i+1], "/", hex(code[i+1])
+                i += 1
+                print addr(i) + "         ^^^"
+            except IndexError:
+                print "*** ran out of bytes to process"
 
         elif code[i] == Opcode.LITERAL2:
-            raw = chr(code[i+1]) + chr(code[i+2])
-            tup = struct.unpack(">h", raw)
-            val = tup[0]
-            print addr(i) + " LITERAL2", val, "/", hex(val)
-            i += 2
-            print addr(i) + "         ^^^"
+            try:
+                raw = chr(code[i+1]) + chr(code[i+2])
+                tup = struct.unpack(">h", raw)
+                val = tup[0]
+                print addr(i) + " LITERAL2", val, "/", hex(val)
+                i += 2
+                print addr(i) + "         ^^^"
+            except IndexError:
+                print "*** ran out of bytes to process"
 
         elif code[i] == Opcode.NAME:
-            name = ""
-            i += 1
-            length = code[i]
-            for letter in code[i:i+length+1]:
-                name += chr(letter)
-            print addr(i-1) + " NAME '" + name + "'"
-            i += length
+            try:
+                name = ""
+                i += 1
+                length = code[i]
+                for letter in code[i:i+length+1]:
+                    name += chr(letter)
+                print addr(i-1) + " NAME '" + name + "'"
+                i += length
+            except IndexError:
+                print "*** ran out of bytes to process"
 
         elif code[i] == Opcode.STORENUM:
             print addr(i) + " STORENUM"

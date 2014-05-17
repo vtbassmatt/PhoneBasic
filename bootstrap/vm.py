@@ -1,6 +1,7 @@
 import os
 import pprint
 import struct
+import collections
 
 def real_clear():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -8,6 +9,9 @@ def real_clear():
 
 class VmError(RuntimeError):
     pass
+
+
+ErrCtx = collections.namedtuple('ErrCtx', ['e', 'loc'])
 
 
 class Var(object):
@@ -135,13 +139,16 @@ class BasicVM(object):
                 val = self.VARS[name]
                 self.STACK.append(val)
             else:
-                raise VmError("RETRV: variable is not defined", name)
+                raise VmError("RETRV: variable is not defined", ErrCtx(e=name, loc=self.IP))
 
         elif op == Opcode.ADD:
             op1 = self.STACK.pop()
             op2 = self.STACK.pop()
-            # TODO: ensure this only works on numerics
-            self.STACK.append(Var(typ=Var.NUMERIC, value=(op1.value + op2.value)))
+            if op1.typ == Var.NUMERIC and op2.typ == Var.NUMERIC:
+                self.STACK.append(Var(typ=Var.NUMERIC, value=(op1.value + op2.value)))
+            else:
+                raise VmError("ADD: expected both operands to be numeric",
+                    ErrCtx(e=(op1,op2), loc=self.IP))
 
         elif op == Opcode.EQUAL:
             op1 = self.STACK.pop()
@@ -206,7 +213,7 @@ class BasicVM(object):
             pass
 
         else:
-            raise VmError("unexpected opcode", {"op":op, "loc":self.IP})
+            raise VmError("unexpected opcode", ErrCtx(e=op, loc=self.IP))
 
         self.IP += 1
 

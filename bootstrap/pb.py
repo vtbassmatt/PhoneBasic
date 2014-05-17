@@ -24,8 +24,8 @@ try:
         vm.Run()
     except VmError, e:
         print "Execution error", e.args
-        loc = e.args[1]["loc"]
-        disassemble(code[loc-3:loc+3], 0)
+        loc = e.args[1].loc
+        disassemble(code[loc-3:loc+3], 0, loc)
 
 except IOError, e:
     print "couldn't find or open file", e.filename

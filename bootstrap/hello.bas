@@ -19,6 +19,15 @@ PRINT "a-b", a-b
 PRINT "a*b", a*b
 PRINT "a/b", a/b
 
+LET a BE 3.0
+LET b BE 2
+
+PRINT "a,b", a, b
+PRINT "a+b", a+b
+PRINT "a-b", a-b
+PRINT "a*b", a*b
+PRINT "a/b", a/b
+
 //LET I BE 1
 //SecondLoop:
 //  PRINT I

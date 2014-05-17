@@ -146,18 +146,24 @@ def codegen_literal2(value, ctx):
     ctx.code.append(ord(val[0]))
     ctx.code.append(ord(val[1]))
 
+def codegen_float4(value, ctx):
+    ctx.code.append(Opcode.FLOAT4)
+    val = struct.pack(">f", value)
+    ctx.code.append(ord(val[0]))
+    ctx.code.append(ord(val[1]))
+    ctx.code.append(ord(val[2]))
+    ctx.code.append(ord(val[3]))
+
 def codegen_expr(expr_token, ctx):
     # expressions expected in reverse polish notation
     if type(expr_token) != PExpr:
         raise TranslatorError("expected an expression to parse", expr_token)
     for op in expr_token.expr:
         if type(op) == PNumber:
-            # TODO: deal with numbers > 65K and actually deal with floats
             if "." in op.value:
-                raise NotImplementedError("float literals not implemented", op)
-                #ctx.code.append(Opcode.LITERAL1)
-                #ctx.code.append(float(op.value))
+                codegen_float4(float(op.value), ctx)
             else:
+                # TODO: deal with numbers > 65K
                 codegen_literal2(int(op.value), ctx)
 
         elif type(op) == PArith:

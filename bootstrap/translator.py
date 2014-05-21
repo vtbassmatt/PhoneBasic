@@ -13,23 +13,25 @@ class TranslatorError(RuntimeError):
     pass
 
 
-TContext = collections.namedtuple('TContext',
-    ['label_table', 'string_table', 'code', 'label_fixups'])
+class TContext(object):
+    label_table = {}
+    string_table = []
+    label_fixups = []
+    last_label = None
+    check_accepts = {}
+    check_computes = []
+    # by convention, put a magic number at the beginning
+    # for this case, "PB01" in ASCII
+    code = bytearray([ord("P"), ord("B"), ord("0"), ord("1")])
 
 
 def translate(ast):
-    ctx = TContext(
-        label_table = {},
-        label_fixups = [],
-        string_table = [],
-        # by convention, put a magic number at the beginning
-        # for this case, "PB01" in ASCII
-        code = bytearray([ord("P"), ord("B"), ord("0"), ord("1")])
-    )
+    ctx = TContext()
 
     for op in ast:
         if type(op) == PLabel:
             codegen_label(op.id, ctx)
+            ctx.last_label = op.id
 
         else:
             codegen_stmt(op, ctx)
@@ -41,6 +43,11 @@ def translate(ast):
         val = struct.pack(">h", label_addr)
         ctx.code[addr]   = ord(val[0])
         ctx.code[addr+1] = ord(val[1])
+
+    # verify that all COMPUTEs have the same arg count as their ACCEPTs
+    for (compute_label, compute_count) in ctx.check_computes:
+        if ctx.check_accepts[compute_label] != compute_count:
+            raise TranslatorError("Incorrect argument count for a COMPUTE", compute_label)
 
     return (ctx.code, ctx.string_table)
 
@@ -95,8 +102,14 @@ def codegen_compute(op, ctx):
     in reverse order.
 
     results get assigned back to the original variable."""
+    arg_count = 0
     for expr in op.args[::-1]:
         codegen_expr(expr, ctx)
+        arg_count += 1
+
+    # save the number of arguments called for later checking
+    ctx.check_computes.append( (op.label, arg_count) )
+
     ctx.code.append(Opcode.PUSHSCOPE)
     codegen_label_address(op.label, ctx)
     ctx.code.append(Opcode.GOSUB)
@@ -126,10 +139,14 @@ def codegen_accept(op, ctx):
 
     Meaning, if the arguments are a,b,c - they're on the stack such that
     c pops first and a pops last"""
+
+    # record these variables so we can check their count later
+    ctx.check_accepts[ctx.last_label] = 0
     for var in op.rhs:
         codegen_name(var.id, ctx)
         # TODO: allow strings as arguments to subroutines
         ctx.code.append(Opcode.STORENUM)
+        ctx.check_accepts[ctx.last_label] += 1
 
 def codegen_if(op, ctx):
     # TODO: bug #1 (add AND, OR, and NOT)

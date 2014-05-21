@@ -87,6 +87,11 @@ class TestTokenize(unittest.TestCase):
         self.assertRaises(LexerError, inner)
 
 
+    # TODO: test for "call" and "compute"
+    def test_call_compute(self):
+        pass
+
+
     def test_long(self):
         expect = [
             Token(typ='NEWLINE', value='\n', line=1, column=0),

@@ -28,7 +28,12 @@ class Var(object):
 class Opcode(object):
     """Opcodes for this virtual machine.
 
-    It is a stack-based machine with only one register, the name register.
+    It is a stack-based machine with three stacks:
+    * the value stack (normal values)
+    * the scope stack (variable scopes)
+    * the IP stack (instruction pointers)
+
+    There is also one register, the name register.
 
     Numbers and strings are stored in tables separate from main memory,
     they're accessed by certain opcodes using the name register.
@@ -75,6 +80,12 @@ class Opcode(object):
     GT          = 51    # [b, a] => [1] if a>b, [0] otherwise
     GTE         = 52    # [b, a] => [1] if a>=b, [0] otherwise
 
+    # function calls
+    PUSHSCOPE   = 60
+    POPSCOPE    = 61
+    GOSUB       = 62
+    RETURN      = 63
+
     # make HALT really obvious
     EOM_HALT    = 254
     HALT        = 255
@@ -97,8 +108,10 @@ class BasicVM(object):
     def Reset(self):
         self.IP = 4     # skip metadata
         self.STACK = []
+        self.IP_STACK = []
         self.NAME_REG = None
         self.VARS = {}
+        self.VAR_STACK = []
         self.halted = False
 
     def Step(self):
@@ -253,6 +266,21 @@ class BasicVM(object):
             if test.value == 0:
                 self.IP = addr.value - 1  # the 1 gets added back below
 
+        elif op == Opcode.PUSHSCOPE:
+            self.VAR_STACK.append(self.VARS)
+            self.VARS = {}
+
+        elif op == Opcode.POPSCOPE:
+            self.VARS = self.VAR_STACK.pop()
+
+        elif op == Opcode.GOSUB:
+            self.IP_STACK.append(self.IP)
+            addr = self.STACK.pop()
+            self.IP = addr.value - 1  # the 1 gets added back below
+
+        elif op == Opcode.RETURN:
+            self.IP = self.IP_STACK.pop()
+
         elif op == Opcode.HALT or op == Opcode.EOM_HALT:
             self.halted = True
 
@@ -270,7 +298,8 @@ class BasicVM(object):
             "STACK": self.STACK,
             "NAME_REG": self.NAME_REG,
             "VARs": self.VARS,
-            "HALTed": self.halted,
+            "IP_STACK": self.IP_STACK,
+            "VAR_STACK": self.VAR_STACK,
         })
 
     def Run(self):

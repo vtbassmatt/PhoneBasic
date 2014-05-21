@@ -5,6 +5,7 @@ import struct
 from lexer import tokenize
 from parser import parse, PClear, PLabel, PLet, PPrint, PIf, PGoto, PInput, PEnd
 from parser import PExpr, PVar, PNumber, PArith, PString
+from parser import PCall, PCompute, PReturn, PAccept
 from vm import Opcode
 
 
@@ -63,11 +64,72 @@ def codegen_stmt(op, ctx):
     elif type(op) == PInput:
         codegen_input(op, ctx)
 
+    elif type(op) == PCall:
+        codegen_call(op, ctx)
+
+    elif type(op) == PCompute:
+        codegen_compute(op, ctx)
+
+    elif type(op) == PAccept:
+        codegen_accept(op, ctx)
+
+    elif type(op) == PReturn:
+        codegen_return(op, ctx)
+
     elif type(op) == PEnd:
         ctx.code.append(Opcode.HALT)
 
     else:
         ctx.code.append(Opcode.NOOP)
+
+def codegen_call(op, ctx):
+    """CALL means move execution to the specified label with a new scope
+    of variables. Also, save the place where execution left off, since we'll
+    come back here with a RETURN."""
+    ctx.code.append(Opcode.PUSHSCOPE)
+    codegen_label_address(op.label, ctx)
+    ctx.code.append(Opcode.GOSUB)
+
+def codegen_compute(op, ctx):
+    """COMPUTE is a CALL plus a set of expression results pushed on the stack
+    in reverse order.
+
+    results get assigned back to the original variable."""
+    for expr in op.args[::-1]:
+        codegen_expr(expr, ctx)
+    ctx.code.append(Opcode.PUSHSCOPE)
+    codegen_label_address(op.label, ctx)
+    ctx.code.append(Opcode.GOSUB)
+    # -- execution calls out to the subroutine, and when it returns,
+    #    we should have the result on the stack
+    codegen_name(op.id, ctx)
+    ctx.code.append(Opcode.STORENUM)
+
+def codegen_return(op, ctx):
+    """RETURN means destroy the local scope and return execution to where ever
+    we came from.
+
+    handle returning a value if necessary"""
+    if type(op) != PReturn:
+        raise TranslatorError("expected a return statement")
+
+    if op.expr:
+        # compute the expression and push it on the stack
+        codegen_expr(op.expr, ctx)
+    ctx.code.append(Opcode.POPSCOPE)
+    # opcode RETURN should be the last thing we call, since it'll immediately
+    # send execution elsewhere
+    ctx.code.append(Opcode.RETURN)
+
+def codegen_accept(op, ctx):
+    """Expect these named arguments to be pushed on the stack in reverse order.
+
+    Meaning, if the arguments are a,b,c - they're on the stack such that
+    c pops first and a pops last"""
+    for var in op.rhs:
+        codegen_name(var.id, ctx)
+        # TODO: allow strings as arguments to subroutines
+        ctx.code.append(Opcode.STORENUM)
 
 def codegen_if(op, ctx):
     # TODO: bug #1 (add AND, OR, and NOT)
@@ -323,6 +385,18 @@ def disassemble(code, metadata_bytes=4, base_addr=0):
 
         elif code[i] == Opcode.LTE:
             print addr(i) + " GTE"
+
+        elif code[i] == Opcode.PUSHSCOPE:
+            print addr(i) + " PUSHSCOPE"
+
+        elif code[i] == Opcode.POPSCOPE:
+            print addr(i) + " POPSCOPE"
+
+        elif code[i] == Opcode.GOSUB:
+            print addr(i) + " GOSUB"
+
+        elif code[i] == Opcode.RETURN:
+            print addr(i) + " RETURN"
 
         elif code[i] == Opcode.HALT:
             print addr(i) + " HALT"

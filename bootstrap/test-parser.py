@@ -114,6 +114,10 @@ class TestParser(unittest.TestCase):
 
         self.assertEqual(expect, actual)
 
+    def test_call_compute(self):
+        # TODO: test call/compute
+        pass
+
     def test_expr_mismatch_1(self):
         """paren mismatch 1"""
         # 2 + ( 1 - 5

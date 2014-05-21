@@ -11,8 +11,8 @@ class LexerError(RuntimeError):
 Token = collections.namedtuple('Token', ['typ', 'value', 'line', 'column'])
 
 def tokenize(s):
-    keywords = {'IF', 'THEN', 'PRINT', 'GOTO', 'INPUT', 'LET', 'COMPUTE',
-        'AS', 'ACCEPT', 'RETURN', 'CLEAR', 'END'}
+    keywords = {'IF', 'THEN', 'PRINT', 'GOTO', 'INPUT', 'LET', 'CALL',
+        'COMPUTE', 'AS', 'ACCEPT', 'RETURN', 'CLEAR', 'END'}
     token_specification = [
         ('NUMBER',  r'(\-)?\d+(\.\d*)?'), # Integer or decimal number
         ('STRING',  r'"([^"])*"'),   # Simple strings (no escape character)

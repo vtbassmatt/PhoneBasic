@@ -8,19 +8,23 @@ class ParserError(RuntimeError):
     pass
 
 
-PLabel  = collections.namedtuple('PLabel', ['id'])
-PClear  = collections.namedtuple('PClear', [])
-PLet    = collections.namedtuple('PLet', ['id', 'rhs'])
-PPrint  = collections.namedtuple('PPrint', ['rhs'])
-PInput  = collections.namedtuple('PInput', ['rhs'])
-PIf     = collections.namedtuple('PIf', ['expr1', 'compop', 'expr2', 'stmt'])
-PEnd    = collections.namedtuple('PEnd', [])
-PGoto   = collections.namedtuple('PGoto', ['id'])
-PString = collections.namedtuple('PString', ['value'])
-PExpr   = collections.namedtuple('PExpr', ['expr'])
-PVar    = collections.namedtuple('PVar', ['id'])
-PArith  = collections.namedtuple('PArith', ['op'])
-PNumber = collections.namedtuple('PNumber', ['value'])
+PLabel   = collections.namedtuple('PLabel', ['id'])
+PClear   = collections.namedtuple('PClear', [])
+PLet     = collections.namedtuple('PLet', ['id', 'rhs'])
+PPrint   = collections.namedtuple('PPrint', ['rhs'])
+PInput   = collections.namedtuple('PInput', ['rhs'])
+PIf      = collections.namedtuple('PIf', ['expr1', 'compop', 'expr2', 'stmt'])
+PEnd     = collections.namedtuple('PEnd', [])
+PGoto    = collections.namedtuple('PGoto', ['id'])
+PString  = collections.namedtuple('PString', ['value'])
+PExpr    = collections.namedtuple('PExpr', ['expr'])
+PVar     = collections.namedtuple('PVar', ['id'])
+PArith   = collections.namedtuple('PArith', ['op'])
+PNumber  = collections.namedtuple('PNumber', ['value'])
+PCall    = collections.namedtuple('PCall', ['label'])
+PCompute = collections.namedtuple('PCompute', ['label', 'id', 'args'])
+PReturn  = collections.namedtuple('PReturn', ['expr'])
+PAccept  = collections.namedtuple('PAccept', ['rhs'])
 
 
 operator_table = {
@@ -79,6 +83,18 @@ class Parser(object):
         elif self.token.typ == "CLEAR":
             return self.m_clear()
 
+        elif self.token.typ == "CALL":
+            return self.m_call()
+
+        elif self.token.typ == "COMPUTE":
+            return self.m_compute()
+
+        elif self.token.typ == "RETURN":
+            return self.m_return()
+
+        elif self.token.typ == "ACCEPT":
+            return self.m_accept()
+
         elif self.token.typ == "END":
             return self.m_end()
 
@@ -99,6 +115,46 @@ class Parser(object):
             self.next()
             return PLet(var.value, self.p_expr_or_string())
         raise ParserError("error parsing LET statement", self.token)
+
+    def m_return(self):
+        self.next()
+        if self.token.typ == "NEWLINE":
+            return PReturn(expr=None)
+        else:
+            return PReturn(expr=self.p_expr())
+
+    def m_call(self):
+        label = self.next()
+        if label.typ == "ID":
+            return PCall(label=label.value)
+        else:
+            raise ParserError("error parsing CALL, expected a label", self.token)
+
+    def m_compute(self):
+        (var, az, label) = (self.next(), self.next(), self.next())
+        if var.typ == "ID" and az.typ == "AS" and label.typ == "ID":
+            self.next()
+            return PCompute(label=label.value, id=var.value, args=self.p_arglist())
+        else:
+            raise ParserError("error parsing COMPUTE")
+
+    def m_accept(self):
+        accept_vals = []
+        self.next()
+        while True:
+            if self.token.typ == "ID":
+                accept_vals.append(PVar(self.token.value))
+                self.next()
+                continue
+            elif self.token.typ == "COMMA":
+                self.next()
+                continue
+            elif self.token.typ == "NEWLINE":
+                break
+            else:
+                raise ParserError("unexpected token", self.token)
+
+        return PAccept(accept_vals)
 
     def m_print(self):
         print_vals = []
@@ -155,6 +211,19 @@ class Parser(object):
 
     def m_end(self):
         return PEnd()
+
+    def p_arglist(self):
+        args = []
+        while self.token.typ != "NEWLINE":
+            if self.token.typ == "COMMA":
+                break
+
+            else:
+                args.append(self.p_expr())
+
+            self.next()
+
+        return args
 
     def p_expr_or_string(self):
         if self.token.typ == "STRING":
